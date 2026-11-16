@@ -1441,6 +1441,13 @@ export type Database = {
               referencedRelation: "client_rate_cards";
               referencedColumns: ["agency_id", "id"];
             },
+            {
+              foreignKeyName: "client_rate_rules_location_fk";
+              columns: ["agency_id", "location_id"];
+              isOneToOne: false;
+              referencedRelation: "client_locations";
+              referencedColumns: ["agency_id", "id"];
+            },
           ];
       };
       clients: {
@@ -7631,17 +7638,30 @@ export type Database = {
     };
     Functions: {
       accept_invitation: { Args: { p_token: string }; Returns: Json };
+      accept_shift_request: { Args: { p_request_id: string; p_title?: string }; Returns: string[] };
+      assign_worker: { Args: { p_shift_position_id: string; p_worker_id: string; p_override_reason?: string }; Returns: string };
       bootstrap_agency: { Args: { p_name: string; p_slug: string; p_owner_user_id: string }; Returns: string };
+      cancel_assignment: { Args: { p_assignment_id: string; p_reason: string }; Returns: undefined };
       claim_automation_jobs: { Args: { p_worker: string; p_limit?: number }; Returns: Database["public"]["Tables"]["automation_jobs"]["Row"][] };
       claim_notification_deliveries: { Args: { p_limit?: number }; Returns: Database["public"]["Tables"]["notification_deliveries"]["Row"][] };
       client_shift_staff: { Args: { p_shift_id: string }; Returns: { assignment_id: string; worker_display_name: string; position_name: string; status: Database["public"]["Enums"]["assignment_status"] }[] };
+      confirm_assignment: { Args: { p_assignment_id: string }; Returns: undefined };
       consume_rate_limit: { Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: boolean };
+      create_shifts: { Args: { p: Json }; Returns: string[] };
+      evaluate_worker_eligibility: { Args: { p_shift_position_id: string; p_worker_id: string }; Returns: Json };
+      find_eligible_workers: { Args: { p_shift_position_id: string; p_include_ineligible?: boolean; p_limit?: number }; Returns: { worker_id: string; full_name: string; worker_number: string; engagement_type: Database["public"]["Enums"]["engagement_type"]; eligible: boolean; score: number; failures: Json; warnings: Json; notes: Json; explanation: Json }[] };
+      invite_workers: { Args: { p_shift_position_id: string; p_worker_ids: string[]; p_expires_at?: string; p_override_reason?: string }; Returns: Json };
       log_audit_event: { Args: { p_agency_id: string; p_action: string; p_table: string; p_record_id: string; p_context?: Json }; Returns: undefined };
+      mark_no_show: { Args: { p_assignment_id: string }; Returns: undefined };
       my_permissions: { Args: { p_agency_id: string }; Returns: string[] };
       public_job_openings: { Args: { p_agency_slug?: string; p_job_slug?: string }; Returns: { id: string; agency_id: string; agency_slug: string; agency_name: string; title: string; slug: string; location_city: string; description: string; requirements_text: string; hours_indication: string; pay_indication: string; engagement_types: Database["public"]["Enums"]["engagement_type"][]; published_at: string; closes_at: string }[] };
       purge_rate_limits: { Args: never; Returns: number };
+      reject_shift_request: { Args: { p_request_id: string; p_reason: string }; Returns: undefined };
+      replace_assignment: { Args: { p_assignment_id: string; p_new_worker_id: string; p_override_reason?: string }; Returns: string };
+      request_replacement: { Args: { p_assignment_id: string; p_reason: string }; Returns: undefined };
       respond_to_assignment: { Args: { p_assignment_id: string; p_accept: boolean; p_reason?: string }; Returns: Database["public"]["Enums"]["assignment_status"] };
       respond_to_shift_invitation: { Args: { p_invitation_id: string; p_accept: boolean; p_reason?: string }; Returns: string };
+      withdraw_invitation: { Args: { p_invitation_id: string }; Returns: undefined };
       worker_activation_blockers: { Args: { p_worker_id: string }; Returns: string[] };
     };
     Enums: {

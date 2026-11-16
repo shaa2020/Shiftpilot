@@ -24,6 +24,14 @@ export interface NavSection {
 export const ADMIN_NAV: NavSection[] = [
   { items: [{ href: "/admin", label: "Dashboard", icon: "dashboard", anyOf: ["dashboard.view"] }] },
   {
+    label: "Operations",
+    items: [
+      { href: "/admin/requests", label: "Staffing requests", icon: "bell", anyOf: ["requests.read"] },
+      { href: "/admin/shifts", label: "Shifts", icon: "briefcase", anyOf: ["shifts.read"] },
+      { href: "/admin/schedule", label: "Schedule", icon: "calendar", anyOf: ["shifts.read"] },
+    ],
+  },
+  {
     label: "Business",
     items: [
       { href: "/admin/crm", label: "CRM", icon: "target", anyOf: ["crm.read"] },

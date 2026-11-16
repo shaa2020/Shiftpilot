@@ -392,3 +392,22 @@ describe("worker onboarding rules", () => {
     });
   });
 });
+
+describe("function security", () => {
+  it("no SECURITY DEFINER function relies on is_privileged() (always true inside definer context)", async () => {
+    const r = await db.query(
+      `select n.nspname || '.' || p.proname as fn from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname in ('public', 'app') and p.prosecdef and p.prosrc ilike '%is_privileged()%'`,
+    );
+    expect(r.rows).toEqual([]);
+  });
+
+  it("every SECURITY DEFINER function pins an empty search_path", async () => {
+    const r = await db.query(
+      `select n.nspname || '.' || p.proname as fn from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname in ('public', 'app') and p.prosecdef
+         and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%')`,
+    );
+    expect(r.rows).toEqual([]);
+  });
+});

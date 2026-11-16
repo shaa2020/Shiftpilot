@@ -17,6 +17,8 @@ import { Field, CheckboxField } from "@/components/forms/field";
 import { ConfirmAction } from "@/components/forms/confirm-action";
 import { InvitationForm } from "@/components/forms/invitation-result";
 import { revokeInvitationAction } from "../../settings/team/actions";
+import { addRateRuleAction, approveRateCardAction, createRateCardAction, removeRateRuleAction } from "../rate-actions";
+import { formatMoney } from "@/lib/time";
 import { ClientFields } from "../client-fields";
 import {
   addContactAction, addContractAction, addLocationAction, deleteContactAction, inviteClientUserAction,
@@ -25,7 +27,7 @@ import {
 
 export const metadata: Metadata = { title: "Client" };
 
-const TABS = ["overview", "locations", "contacts", "users", "contracts"] as const;
+const TABS = ["overview", "locations", "contacts", "users", "contracts", "pricing"] as const;
 type Tab = (typeof TABS)[number];
 
 export default async function ClientDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string }> }) {
@@ -40,7 +42,7 @@ export default async function ClientDetailPage({ params, searchParams }: { param
   if (!client) notFound();
   const canWrite = ctx.can("clients.write");
 
-  const tabs = TABS.map((t) => ({ key: t, label: humanize(t === "users" ? "portal users" : t), href: `/admin/clients/${id}?tab=${t}` }));
+  const tabs = TABS.filter((t) => t !== "pricing" || ctx.can("rates.read")).map((t) => ({ key: t, label: humanize(t === "users" ? "portal users" : t), href: `/admin/clients/${id}?tab=${t}` }));
 
   return (
     <>
@@ -74,6 +76,7 @@ export default async function ClientDetailPage({ params, searchParams }: { param
       {tab === "contacts" && <Contacts clientId={id} canWrite={canWrite} />}
       {tab === "users" && <PortalUsers clientId={id} canWrite={canWrite} />}
       {tab === "contracts" && <Contracts clientId={id} canWrite={canWrite} />}
+      {tab === "pricing" && ctx.can("rates.read") && <Pricing clientId={id} agencyId={ctx.agencyId} canWrite={ctx.can("rates.write")} />}
     </>
   );
 }
@@ -400,6 +403,77 @@ async function Contracts({ clientId, canWrite }: { clientId: string; canWrite: b
                 <Field name="payment_term_days" label="Payment term (days)"><Input name="payment_term_days" type="number" min={0} max={180} /></Field>
                 <Field name="notice_period_days" label="Notice (days)"><Input name="notice_period_days" type="number" min={0} /></Field>
               </div>
+            </ServerForm>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+const DAY_LABELS = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+async function Pricing({ clientId, agencyId, canWrite }: { clientId: string; agencyId: string; canWrite: boolean }) {
+  const supabase = await createClient();
+  const [{ data: cards }, { data: positions }, { data: locations }] = await Promise.all([
+    supabase.from("client_rate_cards").select("*, client_rate_rules(*, job_positions(name), client_locations(name))").eq("client_id", clientId).order("effective_from", { ascending: false }),
+    supabase.from("job_positions").select("id, name").eq("agency_id", agencyId).eq("status", "active").order("name"),
+    supabase.from("client_locations").select("id, name").eq("client_id", clientId).order("name"),
+  ]);
+  return (
+    <div className="grid gap-6 xl:grid-cols-3">
+      <div className="space-y-6 xl:col-span-2">
+        {!cards?.length && <EmptyState title="No rate cards yet" description="A client needs an active rate card before assignments can be confirmed." />}
+        {(cards ?? []).map((c) => (
+          <Card key={c.id}>
+            <CardHeader className="flex-row flex-wrap items-center justify-between gap-2">
+              <div>
+                <CardTitle className="flex items-center gap-2">{c.name} <StatusBadge status={c.status} /></CardTitle>
+                <CardDescription>{c.effective_from} → {c.effective_to ?? "open-ended"} · {c.currency}</CardDescription>
+              </div>
+              {canWrite && c.status === "draft" && (
+                <ConfirmAction action={approveRateCardAction} fields={{ id: c.id, client_id: clientId }} title="Approve rate card?" description="The card becomes active from its start date and its rules are locked. The current active card ends the day before." confirmLabel="Approve" variant="default">Approve</ConfirmAction>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!c.client_rate_rules.length ? <p className="text-sm text-muted-foreground">No rules yet.</p> : (
+                <ul className="divide-y divide-border text-sm">
+                  {c.client_rate_rules.map((r) => (
+                    <li key={r.id} className="flex items-center justify-between gap-2 py-2">
+                      <span>
+                        <Badge tone={r.rule_kind === "base" ? "info" : "neutral"}>{humanize(r.rule_kind)}</Badge>{" "}
+                        <span className="font-medium tabular-nums">{r.hourly_rate != null ? `${formatMoney(Number(r.hourly_rate))}/h` : `× ${r.multiplier}`}</span>
+                        <span className="text-muted-foreground"> · {r.job_positions?.name ?? "all positions"} · {r.client_locations?.name ?? "all locations"}
+                          {r.days_of_week ? ` · ${r.days_of_week.map((d) => DAY_LABELS[d]).join("/")}` : ""}{r.time_from ? ` · ${r.time_from.slice(0, 5)}–${r.time_to?.slice(0, 5)}` : ""}</span>
+                      </span>
+                      {canWrite && c.status === "draft" && <ConfirmAction action={removeRateRuleAction} fields={{ id: r.id, client_id: clientId }} title="Remove rule?" variant="ghost" destructive confirmLabel="Remove">Remove</ConfirmAction>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {canWrite && c.status === "draft" && (
+                <ServerForm action={addRateRuleAction.bind(null, clientId, c.id)} submitLabel="Add rule" resetOnSuccess className="grid gap-3 border-t border-border pt-4 sm:grid-cols-4" footerClassName="sm:col-span-4">
+                  <Field name="rule_kind" label="Rule"><NativeSelect name="rule_kind" defaultValue="base">{["base", "weekend", "night", "public_holiday", "overtime"].map((k) => <option key={k} value={k}>{humanize(k)}</option>)}</NativeSelect></Field>
+                  <Field name="hourly_rate" label="Hourly rate (€)"><Input name="hourly_rate" type="number" step="0.01" min={0} /></Field>
+                  <Field name="multiplier" label="or multiplier"><Input name="multiplier" type="number" step="0.01" min={0} placeholder="1.25" /></Field>
+                  <Field name="position_id" label="Position"><NativeSelect name="position_id" defaultValue=""><option value="">All</option>{(positions ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</NativeSelect></Field>
+                  <Field name="location_id" label="Location"><NativeSelect name="location_id" defaultValue=""><option value="">All</option>{(locations ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</NativeSelect></Field>
+                  <Field name="time_from" label="From (night)"><Input name="time_from" type="time" /></Field>
+                  <Field name="time_to" label="To"><Input name="time_to" type="time" /></Field>
+                  <fieldset className="flex flex-wrap items-end gap-2 text-xs"><legend className="mb-1 text-sm font-medium">Days</legend>{DAY_LABELS.slice(1).map((d, i) => <label key={d} className="flex items-center gap-1"><input type="checkbox" name="days_of_week" value={i + 1} className="accent-primary" />{d}</label>)}</fieldset>
+                </ServerForm>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      {canWrite && (
+        <Card className="h-fit">
+          <CardHeader><CardTitle>New rate card</CardTitle><CardDescription>Client billing rates (excl. VAT). Worker wages and agency margins are never shown to the client.</CardDescription></CardHeader>
+          <CardContent>
+            <ServerForm action={createRateCardAction.bind(null, clientId)} submitLabel="Create draft" resetOnSuccess>
+              <Field name="name" label="Name" required><Input name="name" placeholder="Rates 2027" /></Field>
+              <Field name="effective_from" label="Effective from" required><Input name="effective_from" type="date" /></Field>
             </ServerForm>
           </CardContent>
         </Card>

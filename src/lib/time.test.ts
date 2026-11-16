@@ -34,3 +34,24 @@ describe("time-zone helpers", () => {
     expect(formatMoney(1234.5).replace(/\s/g, " ")).toBe("€ 1.234,50");
   });
 });
+
+import { shiftWindow, zonedDateTime, localTime } from "./time";
+
+describe("shift windows", () => {
+  it("converts local wall-clock times in winter and summer", () => {
+    expect(zonedDateTime("2027-01-15", "08:00").toISOString()).toBe("2027-01-15T07:00:00.000Z");
+    expect(zonedDateTime("2027-07-15", "08:00").toISOString()).toBe("2027-07-15T06:00:00.000Z");
+  });
+  it("rolls overnight shifts to the next day", () => {
+    const w = shiftWindow("2027-01-15", "22:00", "06:00");
+    expect(w.startsAt.toISOString()).toBe("2027-01-15T21:00:00.000Z");
+    expect(w.endsAt.toISOString()).toBe("2027-01-16T05:00:00.000Z");
+  });
+  it("handles a night shift across the autumn DST change (9 real hours)", () => {
+    const w = shiftWindow("2027-10-30", "22:00", "06:00");
+    expect((w.endsAt.getTime() - w.startsAt.getTime()) / 3600000).toBe(9);
+  });
+  it("formats local times", () => {
+    expect(localTime("2027-07-15T06:00:00Z")).toBe("08:00");
+  });
+});

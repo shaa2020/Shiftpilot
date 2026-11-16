@@ -64,3 +64,38 @@ export function formatDateTime(iso: string | Date, tz: string = DEFAULT_TZ, loca
 export function formatMoney(amount: number, currency = "EUR", locale = "nl-NL"): string {
   return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
 }
+
+/** UTC instant for a local wall-clock date + time in `tz` (DST-safe). */
+export function zonedDateTime(date: string, time: string, tz: string = DEFAULT_TZ): Date {
+  const [y, m, d] = date.split("-").map(Number);
+  const [hh, mm] = time.split(":").map(Number);
+  const guess = Date.UTC(y, m - 1, d, hh, mm);
+  let offset = tzOffsetMinutes(new Date(guess), tz);
+  let result = new Date(guess - offset * 60000);
+  const offset2 = tzOffsetMinutes(result, tz);
+  if (offset2 !== offset) {
+    offset = offset2;
+    result = new Date(guess - offset * 60000);
+  }
+  return result;
+}
+
+/** Start/end of a shift from local date and times; an end at or before the start rolls to the next day. */
+export function shiftWindow(date: string, start: string, end: string, tz: string = DEFAULT_TZ): { startsAt: Date; endsAt: Date } {
+  const startsAt = zonedDateTime(date, start, tz);
+  const endDate = end <= start ? addDays(date, 1) : date;
+  return { startsAt, endsAt: zonedDateTime(endDate, end, tz) };
+}
+
+export function formatTime(iso: string | Date, tz: string = DEFAULT_TZ): string {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+}
+
+export function formatDate(iso: string | Date, tz: string = DEFAULT_TZ): string {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: tz, weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(new Date(iso));
+}
+
+/** Local HH:MM of an instant. */
+export function localTime(iso: string | Date, tz: string = DEFAULT_TZ): string {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
+}
