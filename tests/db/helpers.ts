@@ -152,7 +152,7 @@ export interface Fixture {
   positions: { cleanerA: string; cleanerB: string };
 }
 
-async function createUser(db: Db, label: string): Promise<string> {
+export async function createUser(db: Db, label: string): Promise<string> {
   const id = randomUUID();
   await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, $2, $3)", [
     id,
@@ -165,6 +165,35 @@ async function createUser(db: Db, label: string): Promise<string> {
 async function roleId(db: Db, key: string): Promise<string> {
   const r = await db.query("select id from public.roles where key = $1 and agency_id is null", [key]);
   return r.rows[0].id;
+}
+
+/** Completes the mandatory checks and activates a worker (as the agency would). */
+export async function activateWorker(db: Db | Tx, agency: string, workerId: string, type: "employee" | "freelancer") {
+  await db.query(
+    `update public.worker_private_details set identity_verification_status = 'verified', identity_verified_at = now(),
+       work_eligibility_status = 'verified', work_eligibility_verified_at = now() where worker_id = $1`,
+    [workerId],
+  );
+  const ref = randomBytes(4).toString("hex");
+  if (type === "employee") {
+    await db.query(
+      `insert into public.employment_contracts (agency_id, worker_id, contract_number, contract_kind, status, start_date, signature_method, signed_at)
+       values ($1, $2, $3, 'fixed_term', 'active', '2026-01-01', 'external_esign', now())`,
+      [agency, workerId, `EC-${ref}`],
+    );
+  } else {
+    const biz = (await db.query(
+      `insert into public.freelancer_businesses (agency_id, worker_id, trade_name, classification_status, classification_reviewed_at)
+       values ($1, $2, 'Fixture Business', 'approved', now()) returning id`,
+      [agency, workerId],
+    )).rows[0].id;
+    await db.query(
+      `insert into public.freelancer_agreements (agency_id, business_id, agreement_number, status, start_date, service_description, signed_at)
+       values ($1, $2, $3, 'active', '2026-01-01', 'Cleaning services', now())`,
+      [agency, biz, `FA-${ref}`],
+    );
+  }
+  await db.query("update public.workers set status = 'active' where id = $1", [workerId]);
 }
 
 export async function buildFixture(db: Db): Promise<Fixture> {
@@ -230,12 +259,15 @@ export async function buildFixture(db: Db): Promise<Fixture> {
   await member(agencyA, c2, users.client2Admin, { approve: true, finance: true, manage: true });
   await member(agencyB, b1, users.clientB1Admin, { approve: true, finance: true, manage: true });
 
-  const worker = async (agency: string, user: string, num: string, type: "employee" | "freelancer") =>
-    (await db.query(
+  const worker = async (agency: string, user: string, num: string, type: "employee" | "freelancer") => {
+    const id = (await db.query(
       `insert into public.workers (agency_id, user_id, worker_number, engagement_type, status, first_name, last_name, email)
-       values ($1, $2, $3, $4, 'active', $5, 'Tester', $6) returning id`,
+       values ($1, $2, $3, $4, 'onboarding', $5, 'Tester', $6) returning id`,
       [agency, user, num, type, `W${num}`, `${num}-${suffix}@example.test`],
     )).rows[0].id as string;
+    await activateWorker(db, agency, id, type);
+    return id;
+  };
   const emp1 = await worker(agencyA, users.workerEmp1, "A-001", "employee");
   const emp2 = await worker(agencyA, users.workerEmp2, "A-002", "employee");
   const free1 = await worker(agencyA, users.workerFree1, "A-003", "freelancer");

@@ -52,6 +52,32 @@ export type Database = {
         };
         Relationships: [];
       };
+      agency_counters: {
+        Row: {
+          agency_id: string;
+          counter_key: string;
+          value: number;
+        };
+        Insert: {
+          agency_id: string;
+          counter_key: string;
+          value?: number;
+        };
+        Update: {
+          agency_id?: string;
+          counter_key?: string;
+          value?: number;
+        };
+        Relationships: [
+            {
+              foreignKeyName: "agency_counters_agency_id_fkey";
+              columns: ["agency_id"];
+              isOneToOne: false;
+              referencedRelation: "agencies";
+              referencedColumns: ["id"];
+            },
+          ];
+      };
       agency_settings: {
         Row: {
           agency_id: string;
@@ -7464,7 +7490,7 @@ export type Database = {
           id: string;
           agency_id: string;
           user_id: string | null;
-          worker_number: string;
+          worker_number: string | null;
           engagement_type: Database["public"]["Enums"]["engagement_type"];
           status: Database["public"]["Enums"]["worker_status"];
           first_name: string;
@@ -7490,7 +7516,7 @@ export type Database = {
           id?: string;
           agency_id: string;
           user_id?: string | null;
-          worker_number: string;
+          worker_number?: string | null;
           engagement_type: Database["public"]["Enums"]["engagement_type"];
           status?: Database["public"]["Enums"]["worker_status"];
           first_name: string;
@@ -7516,7 +7542,7 @@ export type Database = {
           id?: string;
           agency_id?: string;
           user_id?: string | null;
-          worker_number?: string;
+          worker_number?: string | null;
           engagement_type?: Database["public"]["Enums"]["engagement_type"];
           status?: Database["public"]["Enums"]["worker_status"];
           first_name?: string;
@@ -7612,9 +7638,11 @@ export type Database = {
       consume_rate_limit: { Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: boolean };
       log_audit_event: { Args: { p_agency_id: string; p_action: string; p_table: string; p_record_id: string; p_context?: Json }; Returns: undefined };
       my_permissions: { Args: { p_agency_id: string }; Returns: string[] };
+      public_job_openings: { Args: { p_agency_slug?: string; p_job_slug?: string }; Returns: { id: string; agency_id: string; agency_slug: string; agency_name: string; title: string; slug: string; location_city: string; description: string; requirements_text: string; hours_indication: string; pay_indication: string; engagement_types: Database["public"]["Enums"]["engagement_type"][]; published_at: string; closes_at: string }[] };
       purge_rate_limits: { Args: never; Returns: number };
       respond_to_assignment: { Args: { p_assignment_id: string; p_accept: boolean; p_reason?: string }; Returns: Database["public"]["Enums"]["assignment_status"] };
       respond_to_shift_invitation: { Args: { p_invitation_id: string; p_accept: boolean; p_reason?: string }; Returns: string };
+      worker_activation_blockers: { Args: { p_worker_id: string }; Returns: string[] };
     };
     Enums: {
       application_status: "new" | "screening" | "interview" | "assessment" | "offer" | "onboarding" | "hired" | "rejected" | "withdrawn";

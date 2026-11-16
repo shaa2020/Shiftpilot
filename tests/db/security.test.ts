@@ -164,7 +164,7 @@ describe("worker isolation", () => {
       await tx.query("update public.workers set phone = '0612345678' where id = $1", [f.workers.emp1]);
       await expectError(attempt(tx, "update public.workers set status = 'active', engagement_type = 'freelancer' where id = $1", [f.workers.emp1]), "Only agency staff");
       await expectError(
-        attempt(tx, "update public.worker_private_details set work_eligibility_status = 'verified' where worker_id = $1", [f.workers.emp1]),
+        attempt(tx, "update public.worker_private_details set work_eligibility_status = 'pending', work_eligibility_expires_on = '2099-01-01' where worker_id = $1", [f.workers.emp1]),
         "Verification fields",
       );
     });
@@ -323,14 +323,21 @@ describe("pathway separation", () => {
   });
 
   it("freelancers cannot self-approve their classification", async () => {
-    await asUser(db, f.users.workerFree1, async (tx) => {
+    const { createUser } = await import("./helpers");
+    const user = await createUser(db, "newFreelancer");
+    const worker = (await db.query(
+      "insert into public.workers (agency_id, user_id, engagement_type, first_name, last_name, email) values ($1, $2, 'freelancer', 'New', 'Free', $3) returning id",
+      [f.agencyA, user, `nf-${user.slice(0, 8)}@example.test`],
+    )).rows[0].id;
+    await asUser(db, user, async (tx) => {
       const r = await tx.query(
         "insert into public.freelancer_businesses (agency_id, worker_id, trade_name, classification_status) values ($1, $2, 'Free Co', 'approved') returning classification_status",
-        [f.agencyA, f.workers.free1],
+        [f.agencyA, worker],
       );
       expect(r.rows[0].classification_status).toBe("pending");
     });
   });
+
 });
 
 describe("rate limiting", () => {
@@ -345,6 +352,43 @@ describe("rate limiting", () => {
     expect(results).toEqual([true, true, true, false]);
     await asUser(db, f.users.adminA, async (tx) => {
       await expectError(attempt(tx, "select public.consume_rate_limit('x:y', 3, 60)"), "permission denied");
+    });
+  });
+});
+
+describe("worker onboarding rules", () => {
+  it("assigns worker numbers and default onboarding tasks per pathway", async () => {
+    const emp = (await db.query(
+      "insert into public.workers (agency_id, engagement_type, first_name, last_name, email) values ($1, 'employee', 'A', 'B', $2) returning id, worker_number",
+      [f.agencyA, `num-${Math.random()}@example.test`],
+    )).rows[0];
+    expect(emp.worker_number).toMatch(/^W-\d{5}$/);
+    const tasks = (await db.query("select task_type from public.onboarding_tasks where worker_id = $1", [emp.id])).rows.map((r) => r.task_type);
+    expect(tasks).toContain("contract");
+    expect(tasks).not.toContain("classification_review");
+  });
+
+  it("blocks activation until mandatory checks pass, for every role", async () => {
+    const w = (await db.query(
+      "insert into public.workers (agency_id, engagement_type, first_name, last_name, email) values ($1, 'freelancer', 'C', 'D', $2) returning id",
+      [f.agencyA, `gate-${Math.random()}@example.test`],
+    )).rows[0].id;
+    await expectError(db.query("update public.workers set status = 'active' where id = $1", [w]), /Identity has not been verified.*classification review/);
+    await asUser(db, f.users.ownerA, async (tx) => {
+      await expectError(attempt(tx, "update public.workers set status = 'active' where id = $1", [w]), "cannot be activated");
+      const b = await tx.query("select public.worker_activation_blockers($1) b", [w]);
+      expect(b.rows[0].b.length).toBeGreaterThanOrEqual(4);
+    });
+    await expectError(
+      db.query("insert into public.workers (agency_id, engagement_type, status, first_name, last_name, email) values ($1, 'employee', 'active', 'E', 'F', 'x@y.nl')", [f.agencyA]),
+      "cannot be created as active",
+    );
+  });
+
+  it("lists only published openings publicly", async () => {
+    await asUser(db, null, async (tx) => {
+      const rows = (await tx.query("select title, agency_name from public.public_job_openings()")).rows;
+      expect(rows.every((r) => r.title !== "Draft role")).toBe(true);
     });
   });
 });

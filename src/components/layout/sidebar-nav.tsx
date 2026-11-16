@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  Bell, Briefcase, CalendarDays, Clock, FileText, Home, LayoutDashboard, Menu, Receipt, Settings, Shield, Users,
+  Bell, Briefcase, Building2, CalendarDays, Clock, FileText, HardHat, Home, LayoutDashboard, Megaphone, Menu, Receipt, Settings, Shield, SlidersHorizontal, Target, Users,
   type LucideIcon,
 } from "lucide-react";
 import { Dialog, DialogTrigger, SheetContent } from "@/components/ui/dialog";
@@ -14,6 +14,7 @@ import type { NavIcon, NavSection } from "./nav-config";
 const ICONS: Record<NavIcon, LucideIcon> = {
   dashboard: LayoutDashboard, settings: Settings, users: Users, shield: Shield, briefcase: Briefcase,
   calendar: CalendarDays, clock: Clock, receipt: Receipt, home: Home, file: FileText, bell: Bell,
+  building: Building2, hardhat: HardHat, target: Target, megaphone: Megaphone, sliders: SlidersHorizontal,
 };
 
 function isActive(pathname: string, href: string) {

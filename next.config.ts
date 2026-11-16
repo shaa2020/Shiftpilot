@@ -23,6 +23,8 @@ const nextConfig: NextConfig = {
   experimental: {
     // Enables forbidden() / unauthorized() for authorisation failures.
     authInterrupts: true,
+    // Allows CV/document uploads (validated to max 10 MB in the actions).
+    serverActions: { bodySizeLimit: "11mb" },
   },
   poweredByHeader: false,
   reactStrictMode: true,

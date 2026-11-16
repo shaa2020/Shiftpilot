@@ -7,9 +7,10 @@ import { PageHeader, EmptyState } from "@/components/ui/feedback";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { InviteStaffForm } from "./invite-form";
-import { removeRoleAction, revokeInvitationAction } from "./actions";
+import { NativeSelect, Input } from "@/components/ui/input";
+import { ConfirmAction } from "@/components/forms/confirm-action";
+import { InvitationForm } from "@/components/forms/invitation-result";
+import { inviteStaffAction, removeRoleAction, revokeInvitationAction } from "./actions";
 
 export const metadata: Metadata = { title: "Team & access" };
 
@@ -76,12 +77,18 @@ export default async function TeamPage() {
                               <li key={r.id} className="flex items-center gap-1">
                                 <Badge tone={r.key === "agency_owner" ? "info" : "neutral"}>{r.name}</Badge>
                                 {userId !== ctx.user.id && (r.key !== "agency_owner" || isOwner) && (
-                                  <form action={removeRoleAction}>
-                                    <input type="hidden" name="id" value={r.id} />
-                                    <button type="submit" className="text-xs text-muted-foreground hover:text-danger" aria-label={`Remove ${r.name} from ${p.email}`}>
-                                      ×
-                                    </button>
-                                  </form>
+                                  <ConfirmAction
+                                    action={removeRoleAction}
+                                    fields={{ id: r.id }}
+                                    title={`Remove ${r.name}?`}
+                                    description={`${p.name || p.email} will lose the permissions of this role immediately.`}
+                                    confirmLabel="Remove role"
+                                    variant="ghost"
+                                    size="sm"
+                                    destructive
+                                  >
+                                    <span aria-label={`Remove ${r.name} from ${p.email}`}>×</span>
+                                  </ConfirmAction>
                                 )}
                               </li>
                             ))}
@@ -114,10 +121,9 @@ export default async function TeamPage() {
                         <TD>{i.roles?.name}</TD>
                         <TD className="text-muted-foreground">{formatDateTime(i.expires_at)}</TD>
                         <TD className="text-right">
-                          <form action={revokeInvitationAction}>
-                            <input type="hidden" name="id" value={i.id} />
-                            <Button type="submit" variant="ghost" size="sm">Revoke</Button>
-                          </form>
+                          <ConfirmAction action={revokeInvitationAction} fields={{ id: i.id }} title="Revoke invitation?" description={`The link sent to ${i.email} will stop working.`} confirmLabel="Revoke" variant="ghost" destructive>
+                            Revoke
+                          </ConfirmAction>
                         </TD>
                       </TR>
                     ))}
@@ -134,7 +140,21 @@ export default async function TeamPage() {
             <CardDescription>The invitation link is valid for 7 days and can be used once.</CardDescription>
           </CardHeader>
           <CardContent>
-            <InviteStaffForm roles={roleOptions.map((r) => ({ id: r.id, name: r.name }))} />
+            <InvitationForm action={inviteStaffAction}>
+              <div className="space-y-1.5">
+                <label htmlFor="invite-email" className="text-sm font-medium">Email</label>
+                <Input id="invite-email" name="email" type="email" autoComplete="off" required />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="invite-role" className="text-sm font-medium">Role</label>
+                <NativeSelect id="invite-role" name="role_id" defaultValue="" required>
+                  <option value="" disabled>Choose a role…</option>
+                  {roleOptions.map((r) => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
+                </NativeSelect>
+              </div>
+            </InvitationForm>
           </CardContent>
         </Card>
       </div>

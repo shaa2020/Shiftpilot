@@ -23,7 +23,7 @@ test.describe("public pages", () => {
 });
 
 test.describe("access control", () => {
-  for (const path of ["/admin", "/admin/settings/team", "/client", "/worker", "/portal", "/account"]) {
+  for (const path of ["/admin", "/admin/settings/team", "/admin/clients", "/admin/workers", "/admin/crm", "/admin/recruitment", "/admin/configuration", "/client", "/worker", "/portal", "/account"]) {
     test(`${path} redirects signed-out visitors to login with a safe return path`, async ({ page }) => {
       await page.goto(path);
       await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path).replace(/[/]/g, "%2F")}`));
@@ -107,5 +107,37 @@ test.describe("responsive layout", () => {
     await page.goto("/login");
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
+  });
+});
+
+test.describe("careers site", () => {
+  test("degrades gracefully when job openings cannot be loaded", async ({ page }) => {
+    const res = await page.goto("/recruitment");
+    expect(res?.status()).toBe(200);
+    await expect(page.getByRole("heading", { name: "Open positions" })).toBeVisible();
+    await expect(page.getByText("could not be loaded")).toBeVisible();
+  });
+
+  test("unknown openings return 404", async ({ page }) => {
+    const res = await page.goto("/recruitment/demo/not-a-real-job");
+    expect(res?.status()).toBe(404);
+  });
+
+  test("malformed agency slugs return 404", async ({ page }) => {
+    const res = await page.goto("/recruitment/BAD_SLUG!");
+    expect(res?.status()).toBe(404);
+  });
+});
+
+test.describe("document downloads", () => {
+  test("require a session", async ({ request }) => {
+    const res = await request.get("/api/documents/00000000-0000-4000-8000-000000000000", { maxRedirects: 0 });
+    expect([302, 307]).toContain(res.status());
+    expect(res.headers()["location"]).toContain("/login");
+  });
+
+  test("reject malformed ids", async ({ request }) => {
+    const res = await request.get("/api/documents/not-a-uuid", { maxRedirects: 0 });
+    expect(res.status()).toBe(404);
   });
 });

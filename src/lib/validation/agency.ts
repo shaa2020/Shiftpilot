@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const optionalText = (max: number) =>
+export const optionalText = (max: number) =>
   z.string().trim().max(max).transform((v) => (v === "" ? null : v)).nullable().optional();
 
 /** Dutch IBAN-format check (mod-97) — format only, not account existence. */

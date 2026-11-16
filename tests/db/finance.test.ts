@@ -131,10 +131,7 @@ describe("invoice permissions and immutability", () => {
 
 describe("rates", () => {
   it("wage rates cannot overlap and are immutable", async () => {
-    const contract = (await db.query(
-      "insert into public.employment_contracts (agency_id, worker_id, contract_number, contract_kind, start_date) values ($1, $2, $3, 'fixed_term', '2027-01-01') returning id",
-      [f.agencyA, f.workers.emp1, "EC-" + Date.now()],
-    )).rows[0].id;
+    const contract = (await db.query("select id from public.employment_contracts where worker_id = $1 and status = 'active'", [f.workers.emp1])).rows[0].id;
     const rate = (await db.query(
       "insert into public.wage_rates (agency_id, worker_id, contract_id, hourly_gross, effective_from) values ($1, $2, $3, 15.00, '2027-01-01') returning id",
       [f.agencyA, f.workers.emp1, contract],
@@ -231,7 +228,7 @@ describe("timesheets", () => {
 
 describe("freelancer purchase invoices", () => {
   it("freelancer submissions are forced to 'submitted' and cannot be self-approved", async () => {
-    const biz = (await db.query("insert into public.freelancer_businesses (agency_id, worker_id, trade_name) values ($1, $2, 'Free Co') returning id", [f.agencyA, f.workers.free1])).rows[0].id;
+    const biz = (await db.query("select id from public.freelancer_businesses where worker_id = $1", [f.workers.free1])).rows[0].id;
     await asUser(db, f.users.workerFree1, async (tx) => {
       const r = await tx.query(
         `insert into public.freelancer_invoices (agency_id, business_id, worker_id, supplier_invoice_number, invoice_date, subtotal, vat_rate, vat_amount, total, payee_iban, payee_name, status, approved_at, submitted_by)

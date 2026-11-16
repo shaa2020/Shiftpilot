@@ -6,11 +6,11 @@ import { ADMIN_NAV, CLIENT_NAV, WORKER_NAV, filterNav } from "./nav-config";
 describe("navigation", () => {
   it("filters admin items by permission", () => {
     const nav = filterNav(ADMIN_NAV, new Set(["dashboard.view", "audit.read"]));
-    expect(nav.flatMap((s) => s.items.map((i) => i.href))).toEqual(["/admin", "/admin/audit-log"]);
+    expect(nav.flatMap((s) => s.items.map((i) => i.href))).toEqual(["/admin", "/admin/configuration", "/admin/audit-log"]);
   });
 
   it("drops empty sections", () => {
-    expect(filterNav(ADMIN_NAV, new Set())).toEqual([]);
+    expect(filterNav(ADMIN_NAV, new Set()).map((s) => s.label)).toEqual(["Administration"]);
   });
 
   it("every navigation link points to an implemented page (no dead links)", () => {
