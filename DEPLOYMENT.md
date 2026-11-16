@@ -32,7 +32,6 @@ Never share keys between environments.
 ## 2. Apply migrations
 
 ```bash
-cd shiftpilot
 supabase link --project-ref <project-ref>
 supabase db push            # applies supabase/migrations in order
 ```
@@ -42,7 +41,7 @@ that every table has RLS enabled and aborts otherwise.
 
 ## 3. Deploy the application (Vercel)
 
-1. Import the GitHub repository in Vercel and set **Root Directory = `shiftpilot`**. Framework preset: Next.js.
+1. Import the GitHub repository in Vercel and keep the default root directory. Framework preset: Next.js.
 2. Set the environment variables from ENVIRONMENT.md for Production and Preview separately. Mark
    `SUPABASE_SERVICE_ROLE_KEY` as server-only (never prefix it with `NEXT_PUBLIC_`).
 3. Region: choose an EU function region (e.g. `fra1`) close to the database.
@@ -74,7 +73,7 @@ The owner receives an invitation email, sets a password, signs in, completes **A
 
 ## CI/CD
 
-`.github/workflows/shiftpilot-ci.yml` runs on every change under `shiftpilot/`:
+`.github/workflows/ci.yml` runs on every push and pull request:
 
 - **quality** — lint, typecheck, unit tests, production build, Playwright smoke tests (desktop and mobile).
 - **database** — applies all migrations to PostgreSQL 16 and runs the RLS, concurrency and finance suites; verifies the

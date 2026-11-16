@@ -15,11 +15,8 @@ invoicing and compliance, with four portals on one backend.
 
 ## Repository layout
 
-This application lives in `shiftpilot/` and is fully independent of the other application in the repository root
-(a tour-booking site, which is not modified by ShiftPilot work). Deploy it with the project root set to `shiftpilot/`.
-
 ```
-shiftpilot/
+.
 ├── src/
 │   ├── app/                 Next.js App Router (routes per portal)
 │   │   ├── (auth)/          login, password recovery
@@ -49,7 +46,6 @@ shiftpilot/
 Prerequisites: Node.js 22, the [Supabase CLI](https://supabase.com/docs/guides/cli) and Docker.
 
 ```bash
-cd shiftpilot
 npm ci
 supabase start                       # local Postgres, Auth, Storage, Studio
 cp .env.example .env.local           # fill in the anon + service-role keys printed by `supabase start`
