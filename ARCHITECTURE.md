@@ -58,7 +58,7 @@ the agency bootstrap and (later) background jobs. It is never imported into clie
 
 | # | Decision | Rationale |
 | --- | --- | --- |
-| ADR-1 | Build ShiftPilot in `shiftpilot/`, separate from the existing tour-booking app | The repository already contains a live, unrelated product with its own production database; it must not be overwritten |
+| ADR-1 | ShiftPilot is a standalone repository and deployment with its own Supabase project | Independent release cycle, data and credentials; no shared code or infrastructure with any other product |
 | ADR-2 | Next.js 16 App Router, **Cache Components disabled** | All portal pages are per-user and RLS-protected; request-time rendering avoids accidental cross-user caching |
 | ADR-3 | Integrity rules in PostgreSQL | Double-booking (GiST exclusion), headcount (row lock), state machines, immutability and audit cannot be bypassed by any client |
 | ADR-4 | Permission catalogue as data (`permissions`, `roles`, `role_permissions`) mirrored by a TS constant with a test that fails on divergence | Custom roles per agency without code changes; type-safe UI checks |
