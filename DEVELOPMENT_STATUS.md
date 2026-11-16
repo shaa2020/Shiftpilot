@@ -43,7 +43,7 @@ Done:
 | Phase 8 — Production | Sentry, staff MFA, malware scanning, performance review, penetration test, backup rehearsal, deployment. |
 
 ## Known defects / limitations
-- **Pushes to GitHub are currently refused (403)**: Claude's GitHub access to `shaa2020/shiftpilot` was lost after the first push. Commits for Phases 2–4 exist locally only until access is restored.
+- GitHub access was intermittently refused (403) during development; all commits through Phase 4 (part) are now pushed to `claude/shiftpilot-production-dev-7enlb1`.
 - Signed-in browser flows have not been executed end-to-end (no Supabase Auth server available in the build sandbox); database behaviour is covered by the database suite.
 - The calendar was verified to mount and request data, but not visually inspected with real data.
 - Rate limiting fails open without `SUPABASE_SERVICE_ROLE_KEY`.
