@@ -200,7 +200,11 @@ describe("client requests", () => {
     await asUser(db, f.users.client1Admin, async (tx) => {
       const staff = await tx.query("select * from public.client_shift_staff($1)", [s.shift]);
       expect(staff.rows).toHaveLength(1);
-      expect(Object.keys(staff.rows[0]).sort()).toEqual(["assignment_id", "position_name", "status", "worker_display_name"]);
+      expect(Object.keys(staff.rows[0]).sort()).toEqual(
+        ["assignment_id", "certificates", "checked_in_at", "checked_out_at", "languages", "position_name", "professional_summary", "status", "worker_display_name"],
+      );
+      // Never internal or financial fields.
+      for (const k of ["override_reason", "worker_id", "email", "phone", "hourly", "client_hourly_rate"]) expect(Object.keys(staff.rows[0])).not.toContain(k);
       expect(staff.rows[0].worker_display_name).toBe("WA-001 T.");
       expect((await tx.query("select count(*)::int n from public.shift_assignments")).rows[0].n).toBe(0);
     });

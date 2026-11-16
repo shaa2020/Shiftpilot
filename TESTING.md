@@ -4,13 +4,13 @@
 
 | Suite | Command | Runs against | Count (last local run) |
 | --- | --- | --- | --- |
-| Unit | `npm test` | Node (Vitest) | 36 tests, 8 files — passing |
-| Database (RLS, scheduling, finance) | `npm run test:db` | PostgreSQL 16 + Supabase shim, all migrations applied from scratch | 56 tests, 3 files — passing |
-| E2E smoke | `npm run test:e2e` | Production build (`next start`) in Chromium, desktop + Pixel 7 | 38 tests (19 × 2 viewports) — passing |
+| Unit | `npm test` | Node (Vitest) | 45 tests — passing |
+| Database (RLS, scheduling, finance) | `npm run test:db` | PostgreSQL 16 + Supabase shim, all migrations applied from scratch | 81 tests, 5 files — passing |
+| E2E smoke | `npm run test:e2e` | Production build (`next start`) in Chromium, desktop + Pixel 7 | 74 tests (37 × 2 viewports) — passing |
 | Static checks | `npm run lint`, `npm run typecheck` | ESLint, TypeScript strict | passing |
 | Production build | `npm run build` | Next.js 16 (Turbopack) | passing |
 
-Last local run: 2026-11-16. CI runs all of the above on every change (DEPLOYMENT.md § CI/CD) and additionally applies
+Last local run: 2026-11-17. CI runs all of the above on every change (DEPLOYMENT.md § CI/CD) and additionally applies
 the migrations to the real Supabase database stack.
 
 ## How the database tests work

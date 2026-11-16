@@ -23,7 +23,7 @@ test.describe("public pages", () => {
 });
 
 test.describe("access control", () => {
-  for (const path of ["/admin", "/admin/settings/team", "/admin/clients", "/admin/workers", "/admin/crm", "/admin/recruitment", "/admin/configuration", "/admin/shifts", "/admin/shifts/new", "/admin/schedule", "/admin/requests", "/client", "/worker", "/portal", "/account"]) {
+  for (const path of ["/admin", "/admin/settings/team", "/admin/clients", "/admin/workers", "/admin/crm", "/admin/recruitment", "/admin/configuration", "/admin/shifts", "/admin/shifts/new", "/admin/schedule", "/admin/requests", "/worker/offers", "/worker/schedule", "/worker/timesheets", "/worker/profile", "/client", "/worker", "/portal", "/account"]) {
     test(`${path} redirects signed-out visitors to login with a safe return path`, async ({ page }) => {
       await page.goto(path);
       await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path).replace(/[/]/g, "%2F")}`));

@@ -59,7 +59,17 @@ export const ADMIN_NAV: NavSection[] = [
 
 export const CLIENT_NAV: NavSection[] = [{ items: [{ href: "/client", label: "Overview", icon: "dashboard" }] }];
 
-export const WORKER_NAV: NavSection[] = [{ items: [{ href: "/worker", label: "Home", icon: "home" }] }];
+export const WORKER_NAV: NavSection[] = [
+  {
+    items: [
+      { href: "/worker", label: "Home", icon: "home" },
+      { href: "/worker/offers", label: "Offers", icon: "bell" },
+      { href: "/worker/schedule", label: "My schedule", icon: "calendar" },
+      { href: "/worker/timesheets", label: "Timesheets", icon: "clock" },
+      { href: "/worker/profile", label: "My profile", icon: "users" },
+    ],
+  },
+];
 
 export function filterNav(sections: NavSection[], granted: ReadonlySet<string>): NavSection[] {
   return sections

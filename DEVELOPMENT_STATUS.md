@@ -1,97 +1,64 @@
 # Development status
 
-_Last updated: 2026-11-16 · Branch: `claude/shiftpilot-production-dev-7enlb1`_
+_Last updated: 2026-11-17 · Branch: `claude/shiftpilot-production-dev-7enlb1`_
 
-**Overall: Phase 1 (Foundation) complete and tested. Not ready for commercial release.**
+**Overall: Phases 1–3 complete; Phase 4 partially complete (database engine and worker portal done). Not ready for commercial release.**
 
 ## Completed
 
 ### Phase 1 — Foundation ✅
-- Repository inspection. The repository root contains an unrelated, live tour-booking application with its own
-  production database. ShiftPilot is built as an independent application in `shiftpilot/` and does not modify it.
-- Next.js 16 App Router, React 19, TypeScript strict, Tailwind CSS 4, Radix UI, Zod, Supabase SSR.
-- Design system: light/dark tokens (spec palette), button, inputs, select, label, card, badge, alert, table, dialog,
-  sheet, dropdown, skeleton, empty state, page header, stat card, form field with ARIA wiring, toasts, theme toggle;
-  responsive portal shell with permission-filtered sidebar and mobile navigation.
-- **Database architecture — complete schema for all domains** (15 migrations, 108 tables, 2 views): tenancy, RBAC,
-  CRM, clients, workers, industries/positions/requirements, documents (versioned), employment and freelancer
-  pathways, recruitment, invitations, scheduling with state machines, attendance, timesheets, finance, communication
-  queues, compliance/GDPR, integrations, storage buckets, rate limiting.
-- RLS on every table (enforced at migration time), tenant isolation via composite FKs, privilege-escalation guards,
-  append-only/immutable financial and audit records, double-booking exclusion constraint, headcount locking.
-- Roles and permissions: 45 permissions, 7 system roles, custom roles per agency; TS catalogue verified against the DB.
-- Authentication: sign-in, sign-out (CSRF-checked), password recovery, email-link confirmation (token-hash and PKCE),
-  invitation-based account creation and acceptance, account/security page, sign-in activity log.
-- Server-side authorisation DAL (`requireStaff` / `requireClient` / `requireWorker`), portal chooser.
-- Admin HQ: dashboard with live, permission-aware metrics (hidden — not zero — when not permitted); agency settings
-  (company, invoicing defaults, Waadi/Wtta status, attendance/location policy); team & access (invite staff, revoke
-  invitations, remove roles); roles & permissions matrix; audit log with paging.
-- Client portal and worker portal shells with live overview data.
-- Security: nonce-based CSP, security headers, shared rate limiting, open-redirect protection, email adapter that
-  never reports unsent mail as sent.
-- Environments: `.env.example`, Supabase CLI config, separate dev/staging/production guidance, CI pipeline.
-- Documentation: README, ARCHITECTURE, DATABASE, API, SECURITY, GDPR, COMPLIANCE, DEPLOYMENT, TESTING, ENVIRONMENT,
-  OPERATIONS, BACKUP_AND_RECOVERY.
+Schema for all domains, RLS on every table, roles/permissions, auth (sign-in, recovery, invitations), design system, portal shells, CI, documentation. See git history for details.
 
-## In progress
-- None.
+### Phase 2 — Admin HQ modules ✅
+- Clients: list/search, create/edit/archive, locations, contacts, portal-user invitations with capabilities, contracts, **pricing (rate cards with approval and supersession)**.
+- Workers: profile, identity/eligibility verification, skills, languages, certificates (verify/reject), availability, onboarding tasks, internal notes, employee pathway (contracts, wage rates), freelancer pathway (business, classification review, agreements, commercial rates).
+- Database activation gate: a worker becomes active only after identity, eligibility and contract/classification checks (migration 0016). Automatic worker numbers and default onboarding tasks.
+- Configuration: industries, categories, positions, skills, certificates, qualifications, position requirements.
+- CRM pipeline with activities, follow-ups, ownership and conversion to client.
+- Recruitment: openings, applications pipeline, interviews, screening, hiring into onboarding; public careers site with rate-limited intake, honeypot and content-checked CV upload to private storage.
+- Secure signed-URL document download route.
 
-## Pending (by phase)
+### Phase 3 — Scheduling & matching ✅
+- Eligibility engine with explanations (mandatory failures, warnings, notes, score) covering status, pathway, classification, contracts/agreements, identity and eligibility, regulated positions, requirements, overlap, unavailability and configurable working-time rules.
+- Overrides only for warnings, with `matching.override` and a recorded reason; mandatory failures never overridable.
+- Atomic RPCs: create shifts (weekly recurrence), accept/reject requests, invite, assign, confirm (re-check + immutable rate snapshot), cancel, no-show, replacement request and replacement.
+- In-app notifications for all scheduling events.
+- Admin UI: request review, shifts list/create/detail with matching panel, reschedule, duplicate, cancel, headcount; drag-and-drop calendar with filters and availability overlays.
 
-| Phase | Scope |
+### Phase 4 — Portals, attendance, timesheets (partial)
+Done:
+- Attendance engine (migration 0019): server-authoritative, idempotent check-in/out and breaks; offline device time kept separately and flagged; location stored only when the agency enabled it (geofence verification); staff entries.
+- Timesheets generated at check-out and submitted; client approve/dispute; agency approval; dispute resolution; corrections (adjustments after approval — approved values never change); shift lifecycle follows attendance.
+- Missing check-in / late alerts function; client projections (on duty, staff with check-in times, relevant certificates only); worker-only pay view.
+- **Worker portal**: home (next shift, check-in/out with offline queue, hours this week/month, to-dos), offers (accept/decline/ask a question, eligible available shifts with "I'm interested"), schedule, shift detail (directions, instructions, attendance, own pay, timesheet, correction request, report absence), timesheets, profile (onboarding tasks, personal details, skills, languages, availability).
+
+## Pending
+
+| Area | Scope |
 | --- | --- |
-| 2 — Admin HQ modules | CRM pipeline UI; client management (create/edit/archive, locations, contacts, contracts, client-user invitations); worker management (profiles, skills, certificates, availability, documents, worker invitations); industry/position/requirement configuration UI; recruitment (public careers site, application intake with rate limiting, pipeline, interviews, onboarding tasks) |
-| 3 — Scheduling | Request review, shift creation (recurring, duplication, multi-position), calendar (FullCalendar), eligibility/matching engine with explanations, invitations, confirmations, cancellations, replacements, rate snapshot creation |
-| 4 — Client & worker portals | Client requests, assigned staff, timesheet approval/dispute; worker offers, schedule, check-in/out (`record_attendance` with idempotency and offline device time), timesheet generation, notifications; **full 22-step E2E workflow test on the Supabase stack** |
-| 5 — Financial engine | Rate cards UI, rate resolution (weekend/night/holiday/overtime), invoice generation and issuing, PDF, email delivery, credit notes, payments, payroll export, freelancer purchase-invoice workflow, financial reports (estimated contribution margin) |
-| 6 — Compliance & documents | Document upload/download via signed URLs, verification workflow, expiry reminders, compliance reviews UI, DSR and retention jobs |
-| 7 — PWA & automation | Service worker, offline screens, web push, WhatsApp templates, notification queue worker, AI operations assistant (permission-bounded) |
-| 8 — Production preparation | Sentry, MFA for staff, malware scanning, performance review, external penetration test, backup rehearsal, launch checklist |
+| Phase 4 (rest) | **Client portal pages** (create/cancel staffing requests, shifts with assigned staff and replacement requests, timesheet approval/dispute, team management); **admin timesheets and attendance pages** (approval queue, dispute resolution, correction decisions, live attendance board, staff entries); notifications bell/page; attendance alerts on the admin dashboard. The database functions for all of these exist and are tested. |
+| Phase 5 — Finance | Invoice generation from approved timesheets (weekend/night/holiday rules from snapshots), issuing with numbering, PDF, email, credit notes, payments UI, payroll export, freelancer purchase-invoice workflow, financial reports. Schema and integrity rules exist and are tested. |
+| Phase 6 — Documents & compliance | Upload UI (signed upload), verification queue, expiry reminders, compliance review UI, DSR export/retention jobs. |
+| Phase 7 — PWA & automation | Service worker, push, WhatsApp, notification delivery worker, AI assistant. |
+| Phase 8 — Production | Sentry, staff MFA, malware scanning, performance review, penetration test, backup rehearsal, deployment. |
 
 ## Known defects / limitations
-- Signed-in browser flows have not been executed end-to-end here: the build sandbox cannot download the Supabase Auth
-  binaries (GitHub release downloads are blocked by its network policy). Database-level behaviour is fully tested; a
-  CI job with the Supabase CLI is planned (Phase 4).
-- The CI job that applies migrations to the real Supabase stack is defined but has not run yet (it runs on GitHub
-  Actions after push).
-- Rate limiting fails open when `SUPABASE_SERVICE_ROLE_KEY` is absent (Supabase Auth limits still apply).
-- Removing a role surfaces database errors through the generic error page (to be replaced by inline feedback in Phase 2).
-- Privacy notice and compliance texts require legal review.
+- **Pushes to GitHub are currently refused (403)**: Claude's GitHub access to `shaa2020/shiftpilot` was lost after the first push. Commits for Phases 2–4 exist locally only until access is restored.
+- Signed-in browser flows have not been executed end-to-end (no Supabase Auth server available in the build sandbox); database behaviour is covered by the database suite.
+- The calendar was verified to mount and request data, but not visually inspected with real data.
+- Rate limiting fails open without `SUPABASE_SERVICE_ROLE_KEY`.
+- Legal texts and compliance configuration require professional review.
 
-## Tests
+## Tests (last local run)
 | Suite | Result |
 | --- | --- |
-| Unit (Vitest) | 36 / 36 passed |
-| Database: RLS, scheduling concurrency, finance (PostgreSQL 16) | 56 / 56 passed |
-| E2E smoke (Playwright, desktop + mobile) | 38 / 38 passed |
+| Unit (Vitest) | 45 / 45 passed |
+| Database (RLS, scheduling, matching, attendance, finance) | 81 / 81 passed |
+| E2E smoke (Playwright, desktop + mobile) | 74 / 74 passed |
 | Lint, typecheck, production build | passed |
-| Failed | none |
 
 ## Deployment status
-- Not deployed. No Supabase project or hosting has been provisioned for ShiftPilot yet.
-- Awaiting configuration: Supabase project (EU), Vercel project (root `shiftpilot/`), `SUPABASE_SERVICE_ROLE_KEY`,
-  Resend (`RESEND_API_KEY`, `EMAIL_FROM`), Sentry, custom SMTP for Supabase Auth.
-
-## Production release criteria
-| Criterion | Status |
-| --- | --- |
-| All four portals work | ⏳ shells only (Phases 2–4) |
-| Authentication works | ✅ implemented; ⏳ end-to-end verification on Supabase |
-| Role permissions work | ✅ tested (DB) |
-| Tenant isolation tested | ✅ |
-| Client requests, shift allocation, worker acceptance | ⏳ DB layer ✅, UI pending |
-| Attendance, timesheets | ⏳ DB layer ✅, UI pending |
-| Financial calculations verified, invoices work | ⏳ |
-| Employee and freelancer pathways separate | ✅ DB-enforced |
-| Core PWA features | ⏳ manifest only |
-| Critical security tests pass | ✅ (DB scenarios) |
-| Backups configured, monitoring configured, production secrets | ⏳ |
-| Legal and compliance review | ⏳ required |
-| Deployment documentation complete | ✅ |
+Not deployed. Awaiting: Supabase project (EU), hosting, service-role key, Resend, Sentry, custom SMTP.
 
 ## Next exact task
-**Phase 2, step 1 — Client management module:** `/admin/clients` list (TanStack Table, search, status filter),
-create/edit form (KvK, VAT, billing, payment terms, industry), archive action (`clients.archive`), client detail with
-locations and contacts CRUD, and client-user invitations (reuse the staff invitation flow with `kind = 'client'` and
-capability checkboxes). Add DB tests for location-scoped invitations and E2E smoke for the new routes; add the nav item
-only when the page exists.
+**Phase 4 — client portal:** `/client/requests` (list + new request form calling an insert as the client user with RLS; cancel), `/client/shifts` and `/client/shifts/[id]` (use `client_shift_staff`, `request_replacement`), `/client/timesheets` (use `client_review_timesheet`), `/client/team` (client invitations via `createInvitation`). Then `/admin/timesheets`, `/admin/attendance` and the notifications bell.

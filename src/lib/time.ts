@@ -99,3 +99,8 @@ export function formatDate(iso: string | Date, tz: string = DEFAULT_TZ): string 
 export function localTime(iso: string | Date, tz: string = DEFAULT_TZ): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
 }
+
+/** Current time in ms. Server pages render per request, so this is evaluated once per request. */
+export function nowMs(): number {
+  return Date.now();
+}

@@ -20,7 +20,9 @@ export function ConfirmAction({
   size = "sm",
   destructive,
   withReason,
+  reasonOptional,
 }: {
+  reasonOptional?: boolean;
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   fields?: Record<string, string>;
   title: string;
@@ -74,7 +76,7 @@ export function ConfirmAction({
             <AlertDialog.Cancel asChild>
               <Button variant="ghost" type="button">Cancel</Button>
             </AlertDialog.Cancel>
-            <Button type="button" variant={destructive ? "destructive" : "default"} onClick={run} disabled={pending || (!!withReason && reason.trim().length < 3)}>
+            <Button type="button" variant={destructive ? "destructive" : "default"} onClick={run} disabled={pending || (!!withReason && !reasonOptional && reason.trim().length < 3)}>
               {pending ? "Working…" : confirmLabel}
             </Button>
           </div>
