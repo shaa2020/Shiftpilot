@@ -23,7 +23,7 @@ test.describe("public pages", () => {
 });
 
 test.describe("access control", () => {
-  for (const path of ["/admin", "/admin/settings/team", "/admin/clients", "/admin/workers", "/admin/crm", "/admin/recruitment", "/admin/configuration", "/admin/shifts", "/admin/shifts/new", "/admin/schedule", "/admin/requests", "/admin/timesheets", "/admin/attendance", "/notifications", "/worker/offers", "/worker/schedule", "/worker/timesheets", "/worker/profile", "/client/requests", "/client/requests/new", "/client/shifts", "/client/timesheets", "/client/team", "/client", "/worker", "/portal", "/account"]) {
+  for (const path of ["/admin", "/admin/settings/team", "/admin/clients", "/admin/workers", "/admin/crm", "/admin/recruitment", "/admin/configuration", "/admin/shifts", "/admin/shifts/new", "/admin/schedule", "/admin/requests", "/admin/timesheets", "/admin/attendance", "/notifications", "/admin/finance", "/admin/invoices", "/admin/payroll", "/admin/purchase-invoices", "/client/invoices", "/client/pricing", "/worker/earnings", "/worker/offers", "/worker/schedule", "/worker/timesheets", "/worker/profile", "/client/requests", "/client/requests/new", "/client/shifts", "/client/timesheets", "/client/team", "/client", "/worker", "/portal", "/account"]) {
     test(`${path} redirects signed-out visitors to login with a safe return path`, async ({ page }) => {
       await page.goto(path);
       await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path).replace(/[/]/g, "%2F")}`));
@@ -139,5 +139,16 @@ test.describe("document downloads", () => {
   test("reject malformed ids", async ({ request }) => {
     const res = await request.get("/api/documents/not-a-uuid", { maxRedirects: 0 });
     expect(res.status()).toBe(404);
+  });
+});
+
+test.describe("finance endpoints", () => {
+  test("invoice PDFs and payroll CSVs require a session", async ({ request }) => {
+    for (const path of ["/api/invoices/00000000-0000-4000-8000-000000000000/pdf"]) {
+      const res = await request.get(path, { maxRedirects: 0 });
+      expect([302, 307]).toContain(res.status());
+    }
+    expect((await request.get("/api/invoices/not-a-uuid/pdf", { maxRedirects: 0 })).status()).toBe(404);
+    expect((await request.get("/api/payroll-exports/not-a-uuid", { maxRedirects: 0 })).status()).toBe(404);
   });
 });

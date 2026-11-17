@@ -102,6 +102,8 @@ export type Database = {
           missing_checkin_alert_minutes: number;
           settings: Json;
           updated_at: string;
+          payroll_night_from: string;
+          payroll_night_to: string;
         };
         Insert: {
           agency_id: string;
@@ -126,6 +128,8 @@ export type Database = {
           missing_checkin_alert_minutes?: number;
           settings?: Json;
           updated_at?: string;
+          payroll_night_from?: string;
+          payroll_night_to?: string;
         };
         Update: {
           agency_id?: string;
@@ -150,6 +154,8 @@ export type Database = {
           missing_checkin_alert_minutes?: number;
           settings?: Json;
           updated_at?: string;
+          payroll_night_from?: string;
+          payroll_night_to?: string;
         };
         Relationships: [
             {
@@ -5334,6 +5340,38 @@ export type Database = {
         };
         Relationships: [];
       };
+      public_holidays: {
+        Row: {
+          id: string;
+          agency_id: string;
+          holiday_date: string;
+          name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          holiday_date: string;
+          name: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          holiday_date?: string;
+          name?: string;
+          created_at?: string;
+        };
+        Relationships: [
+            {
+              foreignKeyName: "public_holidays_agency_id_fkey";
+              columns: ["agency_id"];
+              isOneToOne: false;
+              referencedRelation: "agencies";
+              referencedColumns: ["id"];
+            },
+          ];
+      };
       purchase_invoices: {
         Row: {
           id: string;
@@ -7653,20 +7691,28 @@ export type Database = {
       client_team: { Args: { p_client_id: string }; Returns: { membership_id: string; full_name: string; email: string; role: Database["public"]["Enums"]["client_member_role"]; status: Database["public"]["Enums"]["record_status"]; can_request_staff: boolean; can_approve_timesheets: boolean; can_view_finance: boolean; can_manage_users: boolean; is_self: boolean }[] };
       confirm_assignment: { Args: { p_assignment_id: string }; Returns: undefined };
       consume_rate_limit: { Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: boolean };
+      create_credit_note: { Args: { p_invoice_id: string; p_reason: string }; Returns: string };
       create_shifts: { Args: { p: Json }; Returns: string[] };
       decide_attendance_correction: { Args: { p_correction_id: string; p_approve: boolean; p_note: string }; Returns: undefined };
       evaluate_worker_eligibility: { Args: { p_shift_position_id: string; p_worker_id: string }; Returns: Json };
       express_shift_interest: { Args: { p_shift_position_id: string; p_worker_id: string }; Returns: undefined };
+      financial_summary: { Args: { p_agency_id: string; p_from: string; p_to: string }; Returns: Json };
       find_eligible_workers: { Args: { p_shift_position_id: string; p_include_ineligible?: boolean; p_limit?: number }; Returns: { worker_id: string; full_name: string; worker_number: string; engagement_type: Database["public"]["Enums"]["engagement_type"]; eligible: boolean; score: number; failures: Json; warnings: Json; notes: Json; explanation: Json }[] };
+      generate_client_invoice: { Args: { p_client_id: string; p_period_start: string; p_period_end: string }; Returns: string };
+      generate_payroll_export: { Args: { p_payroll_period_id: string; p_format?: string }; Returns: string };
       invite_workers: { Args: { p_shift_position_id: string; p_worker_ids: string[]; p_expires_at?: string; p_override_reason?: string }; Returns: Json };
+      issue_invoice: { Args: { p_invoice_id: string }; Returns: string };
       log_audit_event: { Args: { p_agency_id: string; p_action: string; p_table: string; p_record_id: string; p_context?: Json }; Returns: undefined };
+      mark_freelancer_invoice_paid: { Args: { p_invoice_id: string; p_paid_on: string; p_reference: string }; Returns: undefined };
       mark_no_show: { Args: { p_assignment_id: string }; Returns: undefined };
       my_assignment_pay: { Args: { p_assignment_id: string }; Returns: { pay_basis: string; hourly_amount: number; fixed_fee: number; currency: string }[] };
       my_attendance_policy: { Args: { p_worker_id: string }; Returns: { location_verification_enabled: boolean; location_privacy_notice: string; timezone: string }[] };
       my_permissions: { Args: { p_agency_id: string }; Returns: string[] };
+      my_uninvoiced_timesheets: { Args: { p_worker_id: string }; Returns: { timesheet_id: string; scheduled_start: string; shift_title: string; worked_minutes: number; hourly_amount: number; fixed_fee: number; amount: number }[] };
       public_job_openings: { Args: { p_agency_slug?: string; p_job_slug?: string }; Returns: { id: string; agency_id: string; agency_slug: string; agency_name: string; title: string; slug: string; location_city: string; description: string; requirements_text: string; hours_indication: string; pay_indication: string; engagement_types: Database["public"]["Enums"]["engagement_type"][]; published_at: string; closes_at: string }[] };
       purge_rate_limits: { Args: never; Returns: number };
       record_attendance: { Args: { p_assignment_id: string; p_event_type: string; p_idempotency_key: string; p_device_time?: string; p_offline?: boolean; p_latitude?: number; p_longitude?: number; p_accuracy_m?: number }; Returns: Json };
+      record_invoice_sent: { Args: { p_invoice_id: string; p_sent_to: string }; Returns: undefined };
       reject_shift_request: { Args: { p_request_id: string; p_reason: string }; Returns: undefined };
       replace_assignment: { Args: { p_assignment_id: string; p_new_worker_id: string; p_override_reason?: string }; Returns: string };
       request_invitation_clarification: { Args: { p_invitation_id: string; p_question: string }; Returns: undefined };
@@ -7674,7 +7720,10 @@ export type Database = {
       resolve_timesheet_dispute: { Args: { p_timesheet_id: string; p_actual_start: string; p_actual_end: string; p_break_minutes: number; p_note: string }; Returns: undefined };
       respond_to_assignment: { Args: { p_assignment_id: string; p_accept: boolean; p_reason?: string }; Returns: Database["public"]["Enums"]["assignment_status"] };
       respond_to_shift_invitation: { Args: { p_invitation_id: string; p_accept: boolean; p_reason?: string }; Returns: string };
+      review_freelancer_invoice: { Args: { p_invoice_id: string; p_approve: boolean; p_note: string }; Returns: undefined };
       staff_record_attendance: { Args: { p_assignment_id: string; p_event_type: string; p_occurred_at: string; p_note: string }; Returns: string };
+      submit_freelancer_invoice: { Args: { p_worker_id: string; p_supplier_invoice_number: string; p_invoice_date: string; p_timesheet_ids: string[]; p_vat_rate: number; p_payee_iban: string; p_payee_name: string }; Returns: string };
+      timesheet_billing_preview: { Args: { p_timesheet_id: string }; Returns: { category: string; minutes: number; hourly_rate: number }[] };
       withdraw_invitation: { Args: { p_invitation_id: string }; Returns: undefined };
       worker_activation_blockers: { Args: { p_worker_id: string }; Returns: string[] };
       worker_available_shifts: { Args: { p_worker_id: string }; Returns: { shift_position_id: string; shift_id: string; title: string; position_name: string; client_name: string; location_name: string; city: string; starts_at: string; ends_at: string; break_minutes: number; open_slots: number }[] };

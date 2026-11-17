@@ -48,6 +48,15 @@ export const ADMIN_NAV: NavSection[] = [
     ],
   },
   {
+    label: "Finance",
+    items: [
+      { href: "/admin/finance", label: "Overview", icon: "dashboard", anyOf: ["finance.read"] },
+      { href: "/admin/invoices", label: "Invoices", icon: "receipt", anyOf: ["finance.read"] },
+      { href: "/admin/payroll", label: "Payroll exports", icon: "file", anyOf: ["payroll.export"] },
+      { href: "/admin/purchase-invoices", label: "Freelancer invoices", icon: "receipt", anyOf: ["finance.read", "purchase_invoices.approve"] },
+    ],
+  },
+  {
     label: "Administration",
     items: [
       { href: "/admin/settings", label: "Agency settings", icon: "settings", anyOf: ["agency.settings.manage"] },
@@ -68,6 +77,8 @@ export const CLIENT_NAV: NavSection[] = [
       { href: "/client/requests", label: "Staffing requests", icon: "bell" },
       { href: "/client/shifts", label: "Shifts", icon: "calendar" },
       { href: "/client/timesheets", label: "Timesheets", icon: "clock" },
+      { href: "/client/invoices", label: "Invoices", icon: "receipt" },
+      { href: "/client/pricing", label: "Pricing", icon: "file" },
       { href: "/client/team", label: "Team", icon: "users" },
     ],
   },
@@ -77,6 +88,10 @@ export const CLIENT_NAV: NavSection[] = [
 export function clientNav(caps: ClientNavCaps): NavSection[] {
   const hide = new Set<string>();
   if (!caps.manageUsers) hide.add("/client/team");
+  if (!caps.finance) {
+    hide.add("/client/invoices");
+    hide.add("/client/pricing");
+  }
   return CLIENT_NAV.map((s) => ({ ...s, items: s.items.filter((i) => !hide.has(i.href)) }));
 }
 
@@ -87,6 +102,7 @@ export const WORKER_NAV: NavSection[] = [
       { href: "/worker/offers", label: "Offers", icon: "bell" },
       { href: "/worker/schedule", label: "My schedule", icon: "calendar" },
       { href: "/worker/timesheets", label: "Timesheets", icon: "clock" },
+      { href: "/worker/earnings", label: "Earnings", icon: "receipt" },
       { href: "/worker/profile", label: "My profile", icon: "users" },
     ],
   },

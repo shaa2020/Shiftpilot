@@ -12,6 +12,7 @@ export interface EmailMessage {
   html: string;
   text: string;
   idempotencyKey: string;
+  attachments?: { filename: string; content: Uint8Array }[];
 }
 
 /**
@@ -32,7 +33,10 @@ export async function sendEmail(msg: EmailMessage): Promise<EmailResult> {
         "Content-Type": "application/json",
         "Idempotency-Key": msg.idempotencyKey,
       },
-      body: JSON.stringify({ from, to: [msg.to], subject: msg.subject, html: msg.html, text: msg.text }),
+      body: JSON.stringify({
+        from, to: [msg.to], subject: msg.subject, html: msg.html, text: msg.text,
+        ...(msg.attachments?.length ? { attachments: msg.attachments.map((a) => ({ filename: a.filename, content: Buffer.from(a.content).toString("base64") })) } : {}),
+      }),
       signal: AbortSignal.timeout(10_000),
     });
     const body = (await res.json().catch(() => ({}))) as { id?: string; message?: string };
