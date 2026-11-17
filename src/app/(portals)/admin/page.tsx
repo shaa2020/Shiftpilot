@@ -37,6 +37,10 @@ export default async function AdminDashboard() {
           <StatCard label="Unfilled upcoming shifts" value={m.unfilledShifts} icon={CalendarClock} tone={m.unfilledShifts > 0 ? "warning" : "success"} />
         )}
         {m.workersOnDuty !== null && <StatCard label="Workers on duty" value={m.workersOnDuty} icon={UserCheck} tone="success" />}
+        {m.attendanceAlerts !== null && (
+          <StatCard label="Missing check-ins / late" value={`${m.attendanceAlerts.missing} / ${m.attendanceAlerts.late}`} icon={UserCheck}
+            tone={m.attendanceAlerts.missing ? "danger" : m.attendanceAlerts.late ? "warning" : "neutral"} hint="See Attendance" />
+        )}
         {m.shiftsNext7Days !== null && <StatCard label="Shifts next 7 days" value={m.shiftsNext7Days} icon={CalendarDays} />}
         {m.pendingRequests !== null && <StatCard label="Staffing requests to review" value={m.pendingRequests} icon={Inbox} tone={m.pendingRequests > 0 ? "warning" : "neutral"} />}
         {m.pendingTimesheets !== null && <StatCard label="Timesheets awaiting approval" value={m.pendingTimesheets} icon={ClipboardCheck} />}

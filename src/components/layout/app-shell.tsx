@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BrandMark } from "./brand";
 import { SidebarNav, MobileNav } from "./sidebar-nav";
 import { UserMenu } from "./user-menu";
+import { NotificationBell } from "./notification-bell";
 import type { NavSection } from "./nav-config";
 
 export interface AppShellProps {
@@ -35,7 +36,8 @@ export function AppShell({ portalLabel, contextLabel, nav, user, canSwitchPortal
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-surface/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-surface/80 lg:px-6">
           <MobileNav sections={nav} portalLabel={portalLabel} contextLabel={contextLabel} />
           <div className="min-w-0 flex-1 truncate text-sm text-muted-foreground lg:hidden">{contextLabel ?? portalLabel}</div>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1">
+            <NotificationBell />
             <UserMenu user={user} canSwitchPortal={canSwitchPortal} />
           </div>
         </header>

@@ -29,6 +29,8 @@ export const ADMIN_NAV: NavSection[] = [
       { href: "/admin/requests", label: "Staffing requests", icon: "bell", anyOf: ["requests.read"] },
       { href: "/admin/shifts", label: "Shifts", icon: "briefcase", anyOf: ["shifts.read"] },
       { href: "/admin/schedule", label: "Schedule", icon: "calendar", anyOf: ["shifts.read"] },
+      { href: "/admin/attendance", label: "Attendance", icon: "clock", anyOf: ["attendance.read"] },
+      { href: "/admin/timesheets", label: "Timesheets", icon: "file", anyOf: ["timesheets.read"] },
     ],
   },
   {
@@ -57,7 +59,26 @@ export const ADMIN_NAV: NavSection[] = [
   },
 ];
 
-export const CLIENT_NAV: NavSection[] = [{ items: [{ href: "/client", label: "Overview", icon: "dashboard" }] }];
+export interface ClientNavCaps { request: boolean; approve: boolean; finance: boolean; manageUsers: boolean }
+
+export const CLIENT_NAV: NavSection[] = [
+  {
+    items: [
+      { href: "/client", label: "Overview", icon: "dashboard" },
+      { href: "/client/requests", label: "Staffing requests", icon: "bell" },
+      { href: "/client/shifts", label: "Shifts", icon: "calendar" },
+      { href: "/client/timesheets", label: "Timesheets", icon: "clock" },
+      { href: "/client/team", label: "Team", icon: "users" },
+    ],
+  },
+];
+
+/** Client navigation filtered by membership capabilities (UI only; RLS enforces access). */
+export function clientNav(caps: ClientNavCaps): NavSection[] {
+  const hide = new Set<string>();
+  if (!caps.manageUsers) hide.add("/client/team");
+  return CLIENT_NAV.map((s) => ({ ...s, items: s.items.filter((i) => !hide.has(i.href)) }));
+}
 
 export const WORKER_NAV: NavSection[] = [
   {

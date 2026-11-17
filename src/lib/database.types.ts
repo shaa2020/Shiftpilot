@@ -7646,9 +7646,11 @@ export type Database = {
       cancel_assignment: { Args: { p_assignment_id: string; p_reason: string }; Returns: undefined };
       claim_automation_jobs: { Args: { p_worker: string; p_limit?: number }; Returns: Database["public"]["Tables"]["automation_jobs"]["Row"][] };
       claim_notification_deliveries: { Args: { p_limit?: number }; Returns: Database["public"]["Tables"]["notification_deliveries"]["Row"][] };
+      client_agency_name: { Args: { p_client_id: string }; Returns: string };
       client_on_duty: { Args: { p_client_id: string }; Returns: { shift_id: string; shift_title: string; location_name: string; worker_display_name: string; checked_in_at: string }[] };
       client_review_timesheet: { Args: { p_timesheet_id: string; p_approve: boolean; p_comment?: string }; Returns: undefined };
       client_shift_staff: { Args: { p_shift_id: string }; Returns: { assignment_id: string; worker_display_name: string; position_name: string; status: Database["public"]["Enums"]["assignment_status"]; checked_in_at: string; checked_out_at: string; professional_summary: string; certificates: string[]; languages: string[] }[] };
+      client_team: { Args: { p_client_id: string }; Returns: { membership_id: string; full_name: string; email: string; role: Database["public"]["Enums"]["client_member_role"]; status: Database["public"]["Enums"]["record_status"]; can_request_staff: boolean; can_approve_timesheets: boolean; can_view_finance: boolean; can_manage_users: boolean; is_self: boolean }[] };
       confirm_assignment: { Args: { p_assignment_id: string }; Returns: undefined };
       consume_rate_limit: { Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: boolean };
       create_shifts: { Args: { p: Json }; Returns: string[] };

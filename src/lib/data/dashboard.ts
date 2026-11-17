@@ -19,6 +19,7 @@ export interface DashboardMetrics {
   pendingRequests: number | null;
   billedThisMonth: number | null;
   outstanding: { amount: number; count: number; overdue: number } | null;
+  attendanceAlerts: { missing: number; late: number } | null;
 }
 
 type CountResult = PromiseLike<{ count: number | null; error: unknown }>;
@@ -105,7 +106,14 @@ export async function getDashboardMetrics(ctx: StaffContext, now = new Date()): 
         : null,
     ]);
 
+  let attendanceAlerts: DashboardMetrics["attendanceAlerts"] = null;
+  if (ctx.can("attendance.read")) {
+    const { data } = await supabase.rpc("attendance_alerts", { p_agency_id: a });
+    attendanceAlerts = { missing: (data ?? []).filter((r) => r.alert === "missing_check_in").length, late: (data ?? []).filter((r) => r.alert === "late_check_in").length };
+  }
+
   return {
+    attendanceAlerts,
     activeClients, workers, shiftsToday, shiftsNext7Days, unfilledShifts, workersOnDuty, pendingTimesheets, pendingRequests,
     billedThisMonth, outstanding,
   };
