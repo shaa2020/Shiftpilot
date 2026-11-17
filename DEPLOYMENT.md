@@ -68,8 +68,19 @@ The owner receives an invitation email, sets a password, signs in, completes **A
 | Integration | Configure | Without it |
 | --- | --- | --- |
 | Resend (email) | `RESEND_API_KEY`, `EMAIL_FROM` (verified domain) | Invitation links are shown to the inviter to share manually; nothing is reported as sent |
-| Sentry | `SENTRY_DSN` | Errors are logged to the host's logs only (Sentry wiring is Phase 8) |
-| WhatsApp Business Cloud, Web Push, Google Maps, Exact Online, Moneybird, AFAS, Loket.nl | Phases 5–7 | Core features remain available |
+| Sentry | `SENTRY_DSN` | Errors are logged as structured JSON to the host's logs only |
+| Scheduled jobs | `CRON_SECRET`; `vercel.json` schedules `/api/cron/dispatch` (every 5 min, needs Vercel Pro — otherwise use a daily schedule or an external scheduler sending `Authorization: Bearer $CRON_SECRET`) and `/api/cron/automations` (hourly) | No email/push/WhatsApp delivery, reminders, expiry processing or retention runs; in-app notifications still work |
+| Web Push | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (`npx web-push generate-vapid-keys`) | Push opt-in shows "awaiting configuration" |
+| WhatsApp Business Cloud | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` | Deliveries recorded as `skipped_unconfigured` |
+| Operations assistant | `ANTHROPIC_API_KEY` (add Anthropic to the processing register first) | Assistant page shows "awaiting configuration" |
+| Staff MFA enforcement | `ENFORCE_STAFF_MFA=true` (enable TOTP MFA in Supabase Auth settings) | MFA is optional per user |
+| Google Maps, Exact Online, Moneybird, AFAS, Loket.nl | Not implemented (export files / links only) | Core features remain available |
+
+## 6. Verify
+
+- `GET /api/health` returns `200` with `"status": "ok"`; the `integrations` block shows what is configured.
+- Trigger each cron once manually: `curl -H "Authorization: Bearer $CRON_SECRET" https://<domain>/api/cron/automations`.
+- Run the manual acceptance checklist in TESTING.md with real accounts.
 
 ## CI/CD
 
@@ -82,5 +93,5 @@ The owner receives an invitation email, sets a password, signs in, completes **A
 
 ## Release checklist
 
-See DEVELOPMENT_STATUS.md § Production release criteria. Do not launch commercially until every item is complete,
+See DEVELOPMENT_STATUS.md § Launch gates. Do not launch commercially until every item is complete,
 including the legal/compliance review and an external security test.

@@ -2,63 +2,76 @@
 
 _Last updated: 2026-11-17 · Branch: `claude/shiftpilot-production-dev-7enlb1`_
 
-**Overall: Phases 1–3 complete; Phase 4 partially complete (database engine and worker portal done). Not ready for commercial release.**
+**Overall: all eight build phases are implemented and tested locally. The product is NOT yet ready for commercial launch:
+it has never been deployed, signed-in flows have not been run end-to-end against a real Supabase project, and the
+launch gates below (legal review, penetration test, malware scanning, backup rehearsal) are open.**
 
 ## Completed
 
 ### Phase 1 — Foundation ✅
-Schema for all domains, RLS on every table, roles/permissions, auth (sign-in, recovery, invitations), design system, portal shells, CI, documentation. See git history for details.
+Schema for all domains, RLS on every table, roles/permissions, auth (sign-in, recovery, invitations), design system, portal shells, CI, documentation.
 
 ### Phase 2 — Admin HQ modules ✅
-- Clients: list/search, create/edit/archive, locations, contacts, portal-user invitations with capabilities, contracts, **pricing (rate cards with approval and supersession)**.
-- Workers: profile, identity/eligibility verification, skills, languages, certificates (verify/reject), availability, onboarding tasks, internal notes, employee pathway (contracts, wage rates), freelancer pathway (business, classification review, agreements, commercial rates).
-- Database activation gate: a worker becomes active only after identity, eligibility and contract/classification checks (migration 0016). Automatic worker numbers and default onboarding tasks.
-- Configuration: industries, categories, positions, skills, certificates, qualifications, position requirements.
-- CRM pipeline with activities, follow-ups, ownership and conversion to client.
-- Recruitment: openings, applications pipeline, interviews, screening, hiring into onboarding; public careers site with rate-limited intake, honeypot and content-checked CV upload to private storage.
-- Secure signed-URL document download route.
+Clients (locations, contacts, portal users, contracts, rate cards with approval), workers (verification, skills, certificates, availability, onboarding, notes, employee and freelancer pathways), database activation gate, configuration, CRM, recruitment with public careers site.
 
 ### Phase 3 — Scheduling & matching ✅
-- Eligibility engine with explanations (mandatory failures, warnings, notes, score) covering status, pathway, classification, contracts/agreements, identity and eligibility, regulated positions, requirements, overlap, unavailability and configurable working-time rules.
-- Overrides only for warnings, with `matching.override` and a recorded reason; mandatory failures never overridable.
-- Atomic RPCs: create shifts (weekly recurrence), accept/reject requests, invite, assign, confirm (re-check + immutable rate snapshot), cancel, no-show, replacement request and replacement.
-- In-app notifications for all scheduling events.
-- Admin UI: request review, shifts list/create/detail with matching panel, reschedule, duplicate, cancel, headcount; drag-and-drop calendar with filters and availability overlays.
+Explainable eligibility engine, overrides for warnings only, atomic scheduling RPCs (recurrence, invite, assign, confirm with rate snapshot, cancel, no-show, replacement), notifications, admin shift/request UI and drag-and-drop calendar.
 
-### Phase 4 — Portals, attendance, timesheets (partial)
-Done:
-- Attendance engine (migration 0019): server-authoritative, idempotent check-in/out and breaks; offline device time kept separately and flagged; location stored only when the agency enabled it (geofence verification); staff entries.
-- Timesheets generated at check-out and submitted; client approve/dispute; agency approval; dispute resolution; corrections (adjustments after approval — approved values never change); shift lifecycle follows attendance.
-- Missing check-in / late alerts function; client projections (on duty, staff with check-in times, relevant certificates only); worker-only pay view.
-- **Worker portal**: home (next shift, check-in/out with offline queue, hours this week/month, to-dos), offers (accept/decline/ask a question, eligible available shifts with "I'm interested"), schedule, shift detail (directions, instructions, attendance, own pay, timesheet, correction request, report absence), timesheets, profile (onboarding tasks, personal details, skills, languages, availability).
+### Phase 4 — Portals, attendance, timesheets ✅
+Server-authoritative attendance with offline queue and optional geofence, timesheets with client and agency approval, disputes and post-approval corrections; worker portal, client portal (requests, shifts, timesheets, team), admin timesheet and attendance boards, notification bell.
 
-## Pending
+### Phase 5 — Finance ✅
+Invoice generation from approved timesheets (weekend/night/holiday classification from snapshots, public holidays table), numbering on issue, PDF, email with attachment, credit notes, payments, payroll **data export** (CSV, no statutory calculations), freelancer purchase invoices matched to timesheets, financial overview.
 
-| Area | Scope |
+### Phase 6 — Documents, compliance, GDPR ✅ (migration 0022)
+- Uploads checked by file content (PDF/JPEG/PNG/WebP, 10 MB), versioned, stored privately; worker self-service checklist per pathway; staff uploads from the worker page.
+- Verification queue with expiry capture; a new upload re-opens verification (also after rejection); linked certificates and qualifications follow the decision; workers are notified.
+- Compliance: expiring evidence (60 days), regulated-position reviews, versioned rules with activation/retirement (working-time keys enforced by matching).
+- Privacy: data subject requests (staff-logged and self-service from `/account`, officers notified), JSON subject export (audited), anonymisation of inactive workers and closed applications (records under legal retention kept without identifiers), processing register (versioned), retention schedule, breach register with 72-hour reminder.
+
+### Phase 7 — PWA & automation ✅ (migration 0023)
+- Delivery queue from in-app notifications by user preference: email for important events, push only with a registered device, WhatsApp opt-in. Retries with exponential backoff and dead-lettering. Providers that are not configured are recorded as `skipped_unconfigured`, never as sent.
+- Cron endpoints protected by `CRON_SECRET`: dispatch (every 5 min) and automations (hourly): shift reminders, missing check-ins, document expiry warnings and expiry, overdue invoices, invitation expiry, applicant retention.
+- Service worker: offline fallback page, static asset cache (signed-in pages are never cached), push display and click-through; notification preferences and device management.
+- Read-only operations assistant (`/admin/assistant`) on the Claude API: tools query with the user's own RLS session, are filtered by permission, cannot change data; rate limited; "awaiting configuration" without `ANTHROPIC_API_KEY`.
+
+### Phase 8 — Production preparation ✅ (code), launch gates open
+- Server error reporting via `instrumentation.ts` `onRequestError` (structured logs; Sentry store endpoint when `SENTRY_DSN` is set; query strings and headers never sent).
+- `/api/health` (Supabase reachability and which integrations are configured, never values).
+- TOTP two-factor authentication for all users (enrol on `/account`, challenge on `/mfa`); once enrolled, every portal requires aal2; `ENFORCE_STAFF_MFA=true` makes it mandatory for staff.
+- Security fixes found during this phase: SECURITY DEFINER functions no longer rely on `current_user` (always the owner there); tests scan for this and verify service-only grants.
+
+## Launch gates (not done — cannot be done from the build environment)
+
+| Gate | Why it matters |
 | --- | --- |
-| Phase 4 (rest) | **Client portal pages** (create/cancel staffing requests, shifts with assigned staff and replacement requests, timesheet approval/dispute, team management); **admin timesheets and attendance pages** (approval queue, dispute resolution, correction decisions, live attendance board, staff entries); notifications bell/page; attendance alerts on the admin dashboard. The database functions for all of these exist and are tested. |
-| Phase 5 — Finance | Invoice generation from approved timesheets (weekend/night/holiday rules from snapshots), issuing with numbering, PDF, email, credit notes, payments UI, payroll export, freelancer purchase-invoice workflow, financial reports. Schema and integrity rules exist and are tested. |
-| Phase 6 — Documents & compliance | Upload UI (signed upload), verification queue, expiry reminders, compliance review UI, DSR export/retention jobs. |
-| Phase 7 — PWA & automation | Service worker, push, WhatsApp, notification delivery worker, AI assistant. |
-| Phase 8 — Production | Sentry, staff MFA, malware scanning, performance review, penetration test, backup rehearsal, deployment. |
+| Deploy to an EU Supabase project + hosting, apply migrations, bootstrap the first agency | Nothing is deployed yet |
+| End-to-end test of signed-in flows against real Supabase Auth/Storage (invite → onboarding → shift → check-in → timesheet → invoice) | Only the database layer and signed-out pages are tested automatically |
+| Legal review of privacy notice, retention periods, freelancer classification questions, invoice/VAT texts, compliance rule parameters | ShiftPilot records decisions; it does not make them legally sound |
+| Independent penetration test | Internal review only so far |
+| Malware scanning of uploads | Uploads are type-checked by content, but not virus-scanned |
+| Backup and restore rehearsal (BACKUP_AND_RECOVERY.md) | Procedure documented, never executed |
+| Load/performance test with realistic data volumes | Not measured |
+| Configure Resend (verified domain), VAPID keys, WhatsApp templates, Sentry, custom SMTP for Supabase Auth | Integrations report "awaiting configuration" until then |
 
-## Known defects / limitations
-- GitHub access was intermittently refused (403) during development; all commits through Phase 4 (part) are now pushed to `claude/shiftpilot-production-dev-7enlb1`.
-- Signed-in browser flows have not been executed end-to-end (no Supabase Auth server available in the build sandbox); database behaviour is covered by the database suite.
-- The calendar was verified to mount and request data, but not visually inspected with real data.
+## Known limitations
+- WhatsApp adapter sends plain text; Meta accepts business-initiated messages only with approved templates outside a 24-hour window. Template support is not implemented.
+- Payroll export is a data export for the payroll provider; ShiftPilot does not calculate tax, social security or holiday pay.
+- Cron dispatch every 5 minutes needs a hosting plan that allows it (Vercel Pro); on lower plans set the schedule to daily or use an external scheduler.
+- The assistant sends the user's question and the data it looks up to Anthropic; record this in the processing register before enabling it.
 - Rate limiting fails open without `SUPABASE_SERVICE_ROLE_KEY`.
-- Legal texts and compliance configuration require professional review.
+- The calendar and charts were verified to render, not visually reviewed with production data.
 
-## Tests (last local run)
+## Tests (last local run, 2026-11-17)
 | Suite | Result |
 | --- | --- |
-| Unit (Vitest) | 45 / 45 passed |
-| Database (RLS, scheduling, matching, attendance, finance) | 81 / 81 passed |
-| E2E smoke (Playwright, desktop + mobile) | 74 / 74 passed |
+| Unit (Vitest) | 58 / 58 passed (16 files) |
+| Database (RLS, scheduling, matching, attendance, finance, invoicing, compliance/GDPR, automation) | 101 / 101 passed (8 files) |
+| E2E smoke (Playwright, production build, desktop + mobile) | 128 / 128 passed |
 | Lint, typecheck, production build | passed |
 
 ## Deployment status
-Not deployed. Awaiting: Supabase project (EU), hosting, service-role key, Resend, Sentry, custom SMTP.
+Not deployed. See DEPLOYMENT.md for the step-by-step launch checklist.
 
 ## Next exact task
-**Phase 4 — client portal:** `/client/requests` (list + new request form calling an insert as the client user with RLS; cancel), `/client/shifts` and `/client/shifts/[id]` (use `client_shift_staff`, `request_replacement`), `/client/timesheets` (use `client_review_timesheet`), `/client/team` (client invitations via `createInvitation`). Then `/admin/timesheets`, `/admin/attendance` and the notifications bell.
+Create the EU Supabase project and Vercel project, set the environment variables from ENVIRONMENT.md, run `supabase db push`, bootstrap the first agency (`scripts/bootstrap-agency.mjs`), then run the signed-in end-to-end checklist in TESTING.md § Manual acceptance.

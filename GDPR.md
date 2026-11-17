@@ -45,7 +45,20 @@ worker projection; location is never tracked continuously.
 | Breach response | `breach_records` (detection, risk assessment, authority notification within 72 h, subject notification, measures) |
 | Security of processing | See SECURITY.md |
 
-The DSR/retention **user interfaces and automated export/anonymisation jobs are Phase 6 work** (see DEVELOPMENT_STATUS.md).
+Implemented tools (Admin HQ → **Privacy**, permission `gdpr.manage`):
+
+- Subject requests logged by staff or filed by users themselves on `/account`; privacy officers are notified; overdue requests highlighted.
+- JSON export of everything held about an email address (`export_subject_data`, audited).
+- Anonymisation of inactive/archived workers and closed applications. Contracts, timesheets, payroll and invoices are
+  kept for their legal retention period but no longer carry names, contact details, addresses, notes, availability or
+  location data.
+- Applications are anonymised automatically after `retention_until` by the hourly automation job.
+- Processing register (versioned), retention schedule and breach register with a 72-hour assessment reminder.
+- Document expiry processing and reminders run automatically (Phase 7).
+
+Sub-processors to list in the register when enabled: Supabase (hosting, EU region), Vercel (hosting), Resend (email),
+the browser push services (Google, Apple, Mozilla) for Web Push, Meta (WhatsApp), Anthropic (operations assistant),
+Sentry (error reports, without request headers or query strings).
 
 ## Retention guidance (to be confirmed)
 

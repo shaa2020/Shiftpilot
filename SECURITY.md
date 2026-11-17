@@ -34,7 +34,12 @@ authority) and database guard triggers.
 | IDOR | Every lookup is filtered by RLS on the user's JWT; IDs from the client are never trusted for authorisation |
 | Open redirects | `safeNextPath()` allows same-origin relative paths only |
 | HTTP headers | CSP (per-request nonce), HSTS, `X-Frame-Options: DENY`, `frame-ancestors 'none'`, `nosniff`, strict referrer policy, Permissions-Policy, COOP; `X-Powered-By` removed; portal responses `Cache-Control: private, no-store` |
-| Files | Private buckets; path `{agency}/{document}/…`; storage policies reuse the document read/upload rules; 25 MB limit and MIME allow-list; versions immutable |
+| Files | Private buckets; path `{agency}/{document}/…`; storage policies reuse the document read/upload rules; type detected from file content (PDF/JPEG/PNG/WebP only — HTML/SVG/executables rejected even if renamed), 10 MB limit; versions immutable; a new version re-opens verification |
+| MFA | Supabase TOTP for every user; once enrolled, all portals require an aal2 session (`requireUser`); `ENFORCE_STAFF_MFA` makes enrolment mandatory for staff; verification attempts rate limited |
+| Background jobs | `/api/cron/*` require `CRON_SECRET` (≥ 16 chars, constant-time comparison); queue/automation functions are executable by the service role only (tested) |
+| SECURITY DEFINER | Guards never use `current_user` or `is_privileged()` inside definer functions (always the owner there); a test scans `pg_proc` for both |
+| AI assistant | Read-only tools filtered by the user's permissions and executed with the user's RLS session; tool output treated as data; no write tools; rate limited (30/h) |
+| Error reporting | Sentry events exclude headers, cookies, query strings and bodies |
 | Secrets | Service role key only in server env; `server-only` imports make bundling it into client code a build error; integration secrets referenced by name (`secret_ref`), never stored in the database (a `CHECK` rejects secret-looking keys in `integration_accounts.config`) |
 | Location privacy | Off by default; requires a published privacy notice (DB constraint); recorded only at check-in/out |
 
@@ -47,8 +52,10 @@ published jobs; CSP and security headers are present; sign-out rejects cross-ori
 
 ## Known gaps / pending
 
-- Multi-factor authentication for staff (Supabase TOTP) — planned for Phase 8 hardening.
-- Malware scanning for uploads — requires an external scanner; to be added with the document module (Phase 6).
+- MFA is enforced in the application layer (aal2 check), not yet in RLS policies; a stolen aal1 session token could
+  still call the Data API directly. Adding `auth.jwt()->>'aal' = 'aal2'` to staff policies is recommended once all
+  staff are enrolled.
+- Malware scanning for uploads is not implemented (needs an external scanner, e.g. a storage webhook to ClamAV).
 - `style-src 'unsafe-inline'` is allowed because Radix UI sets inline style attributes; scripts remain nonce-only.
 - Rate limiting fails open if `SUPABASE_SERVICE_ROLE_KEY` is not configured (Supabase Auth limits still apply).
 - An external penetration test is required before commercial launch.

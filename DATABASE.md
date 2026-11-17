@@ -36,6 +36,14 @@ the Data API). Every table has Row Level Security enabled — migration 0014 **f
 | 0013 compliance_gdpr | compliance, GDPR | compliance_rules, eligibility_checks, compliance_reviews, incidents, processing_activities, consent_records, data_subject_requests, data_retention_records, breach_records (+ view document_expiries) |
 | 0014 integrations_storage_bootstrap | integrations, storage, bootstrap, hardening | integration_accounts, webhook_endpoints, webhook_events, external_reference_mappings |
 | 0015 rate_limits | shared rate limiting | rate_limit_buckets |
+| 0016 phase2_workforce_rules | worker numbers, onboarding defaults, activation gate, public openings | agency_counters |
+| 0017 scheduling_engine | eligibility engine, scheduling RPCs, notification helpers | — |
+| 0018 rate_rule_location_fk | location-specific rate rules | — |
+| 0019 attendance_engine | attendance recording, timesheet building and approval, client/worker projections | — |
+| 0020 client_portal_helpers | client portal projections | — |
+| 0021 financial_engine | billing classification, invoicing, credit notes, payroll export, purchase invoices, reports | public_holidays |
+| 0022 documents_compliance_gdpr | document verification, checklist, compliance decisions, subject export, anonymisation, retention, DSR notifications | — |
+| 0023 automation_delivery | notification delivery queue, push registration, scheduled automations | — |
 
 Mapping to the specification's table names: `users` is Supabase's `auth.users` (application data in `profiles`);
 `worker_documents` is a view over `documents`; `document_expiries` is a view over documents and credentials;

@@ -3,6 +3,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect, forbidden } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { serverEnv } from "@/lib/env";
 import { isPermission, type Permission } from "./permissions";
 import type { MembershipSummary } from "./portal";
 
@@ -29,9 +30,18 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   };
 });
 
+/** Authenticator assurance: aal2 is required once a user has a verified MFA factor. */
+export const getAssurance = cache(async () => {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  return { current: data?.currentLevel ?? "aal1", next: data?.nextLevel ?? "aal1" };
+});
+
 export async function requireUser(next?: string): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect(next ? `/login?next=${encodeURIComponent(next)}` : "/login");
+  const aal = await getAssurance();
+  if (aal.next === "aal2" && aal.current !== "aal2") redirect(`/mfa?next=${encodeURIComponent(next ?? "/portal")}`);
   return user;
 }
 
@@ -95,6 +105,8 @@ export async function requireStaff(...required: Permission[]): Promise<StaffCont
   const user = await requireUser("/admin");
   const m = await getMemberships();
   if (m.staffAgencies.length === 0) forbidden();
+  // Optional platform policy: staff must have enrolled TOTP (requireUser already enforces aal2 once enrolled).
+  if (serverEnv.enforceStaffMfa() && (await getAssurance()).next !== "aal2") redirect("/account?mfa=required");
 
   const preferred = (await cookies()).get(ACTIVE_AGENCY_COOKIE)?.value;
   const agency = m.staffAgencies.find((a) => a.agencyId === preferred) ?? m.staffAgencies[0];

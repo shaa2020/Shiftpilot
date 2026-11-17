@@ -9,6 +9,10 @@ import { StatusBadge, humanize } from "@/components/ui/status-badge";
 import { ServerForm } from "@/components/forms/server-form";
 import { Field } from "@/components/forms/field";
 import { submitDataRequestAction } from "./privacy-actions";
+import { Alert } from "@/components/ui/alert";
+import { ConfirmAction } from "@/components/forms/confirm-action";
+import { MfaSetup } from "@/components/auth/mfa-setup";
+import { confirmTotpAction, enrollTotpAction, removeFactorAction } from "@/app/(auth)/mfa/actions";
 import { PageHeader } from "@/components/ui/feedback";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -21,9 +25,12 @@ const EVENT_LABEL: Record<string, string> = {
   password_reset_requested: "Password reset requested", sign_in_failed: "Failed sign-in",
 };
 
-export default async function AccountPage() {
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ mfa?: string }> }) {
   const user = await requireUser("/account");
+  const { mfa } = await searchParams;
   const supabase = await createClient();
+  const { data: factorData } = await supabase.auth.mfa.listFactors();
+  const factors = (factorData?.totp ?? []).filter((f) => f.status === "verified");
   const [{ data: profile }, { data: events }, { data: requests }, { data: agencyRows }] = await Promise.all([
     supabase.from("profiles").select("full_name, phone, locale, email").eq("id", user.id).single(),
     supabase.from("user_sessions").select("id, event, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
@@ -46,6 +53,22 @@ export default async function AccountPage() {
         <Card>
           <CardHeader><CardTitle>Password</CardTitle><CardDescription>At least 12 characters.</CardDescription></CardHeader>
           <CardContent><PasswordForm /></CardContent>
+        </Card>
+        <Card className="md:col-span-2">
+          <CardHeader><CardTitle>Two-factor authentication</CardTitle><CardDescription>Protects your account with a code from an authenticator app in addition to your password.</CardDescription></CardHeader>
+          <CardContent className="space-y-3">
+            {mfa === "required" && factors.length === 0 && <Alert tone="warning">Your agency requires two-factor authentication for staff. Set it up to continue to Admin HQ.</Alert>}
+            {factors.length > 0 ? (
+              <ul className="divide-y divide-border text-sm">
+                {factors.map((f) => (
+                  <li key={f.id} className="flex items-center justify-between py-2">
+                    <span>{f.friendly_name ?? "Authenticator app"} · added {formatDate(f.created_at)}</span>
+                    <ConfirmAction action={removeFactorAction} fields={{ id: f.id }} title="Turn off two-factor authentication?" description="Your account will be protected by your password only." destructive variant="ghost" confirmLabel="Turn off">Remove</ConfirmAction>
+                  </li>
+                ))}
+              </ul>
+            ) : <MfaSetup enroll={enrollTotpAction} confirm={confirmTotpAction} />}
+          </CardContent>
         </Card>
         <Card className="md:col-span-2">
           <CardHeader><CardTitle>Recent security activity</CardTitle></CardHeader>

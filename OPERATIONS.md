@@ -11,12 +11,16 @@
 | Rotate secrets | ENVIRONMENT.md § Rotating secrets |
 | Apply a migration | Staging first: `supabase db push`, run tests; then production during a quiet period |
 | Purge old rate-limit buckets | Schedule `select public.purge_rate_limits();` daily (Supabase cron / pg_cron) |
+| Retry dead notification deliveries | `update notification_deliveries set status = 'queued', attempts = 0, next_attempt_at = now() where status = 'dead' and …` after fixing the cause |
+| Reset a user's MFA (lost phone) | Supabase dashboard → Authentication → Users → the user → remove the MFA factor; verify identity first and record it in the audit log |
 
 ## Monitoring (current state)
 
 - Hosting provider logs (Vercel → Logs) capture server errors. Error pages show a reference digest that matches the log entry.
 - Supabase dashboard: database health, auth logs, API logs.
-- Sentry integration is planned for Phase 8 (`SENTRY_DSN` reserved).
+- Server errors are logged as one-line JSON (`"msg":"request_error"`) and sent to Sentry when `SENTRY_DSN` is set.
+- `GET /api/health` for uptime monitoring (503 when Supabase is unreachable).
+- Cron responses (`/api/cron/dispatch`, `/api/cron/automations`) return counts; check them in the host's cron logs.
 
 Recommended alerts once monitoring is wired: 5xx rate, auth failures spike, database CPU/connections, failed
 notification deliveries (`notification_deliveries.status in ('failed','dead')`), stuck jobs
@@ -34,6 +38,9 @@ notification deliveries (`notification_deliveries.status in ('failed','dead')`),
 | Signed-in user lands on "not linked to an agency" | Account exists without an accepted invitation | Send an invitation to that email address |
 | `Invalid shift transition` / `fully staffed` / `overlaps` errors | Database business rules working as designed | Correct the action; these protect data integrity |
 | "Approved timesheets cannot be modified" | Immutability rule | Submit an attendance correction |
+| Emails/pushes never arrive, deliveries `skipped_unconfigured` | Provider not configured | Set Resend / VAPID / WhatsApp variables; re-queue if needed |
+| Deliveries stay `queued` | Cron not running or `CRON_SECRET` mismatch | Check the host's cron logs; call the endpoint manually with the secret |
+| Upload rejected "Upload a PDF, JPG, PNG or WebP file" | File content is another type (e.g. HEIC, renamed file) | Export the photo as JPG or PDF |
 
 ## Incident handling
 

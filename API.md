@@ -44,8 +44,33 @@ Server Actions are protected against CSRF by Next.js (POST-only, Origin/Host com
 Errors raised by database rules use SQLSTATE `P0001` (business rule), `P0002` (not found) or `42501` (not authorised)
 with human-readable messages that the UI can display.
 
-## C. Planned (later phases)
+## C. Route handlers added in later phases
 
-Shift/request lifecycle actions, attendance recording (`record_attendance` with idempotency keys and offline device
-time), timesheet approval, invoice issuing and PDF generation, payroll export, webhook receivers (Resend, WhatsApp)
-and the AI assistant tool layer. Each will be documented here when implemented.
+| Route | Who | Notes |
+| --- | --- | --- |
+| `GET /api/documents/[id]` | anyone who may read the document (RLS) | Redirect to a 2-minute signed URL; download audited |
+| `GET /api/invoices/[id]/pdf` | finance staff / client finance users (RLS) | Generated PDF of the invoice |
+| `GET /api/payroll-exports/[id]` | `payroll.export` | CSV, formula-injection safe |
+| `GET /api/privacy/export?email=` | `gdpr.manage` | JSON subject export, audited |
+| `GET /api/cron/dispatch` | cron (`Authorization: Bearer $CRON_SECRET`) | Sends queued email/push/WhatsApp deliveries |
+| `GET /api/cron/automations` | cron | Runs `run_scheduled_automations()` |
+| `GET /api/health` | public | Status and which integrations are configured (booleans only) |
+
+## D. RPC functions added in later phases
+
+Scheduling (0017): `create_shifts`, `accept_shift_request`, `reject_shift_request`, `invite_workers`, `assign_worker`,
+`confirm_assignment`, `cancel_assignment`, `mark_no_show`, `request_replacement`, `replace_assignment`,
+`withdraw_invitation`, `find_eligible_workers`, `evaluate_worker_eligibility`.
+Attendance (0019): `record_attendance` (idempotency key, offline device time, optional location), `staff_record_attendance`,
+`client_review_timesheet`, `agency_approve_timesheet`, `resolve_timesheet_dispute`, `decide_attendance_correction`,
+`attendance_alerts`, `worker_available_shifts`, `express_shift_interest`, `my_assignment_pay`, `client_on_duty`.
+Finance (0021): `timesheet_billing_preview`, `generate_client_invoice`, `issue_invoice`, `create_credit_note`,
+`record_invoice_sent`, `generate_payroll_export`, `submit_freelancer_invoice`, `review_freelancer_invoice`,
+`mark_freelancer_invoice_paid`, `financial_summary`.
+Documents/GDPR (0022): `verify_document`, `worker_document_checklist`, `decide_compliance_review`, `export_subject_data`,
+`anonymise_application`, `anonymise_worker`, `my_agencies`, `apply_retention` (service role).
+Automation (0023): `register_push_subscription`; service role only: `complete_notification_delivery`,
+`delivery_context`, `run_scheduled_automations`.
+
+The operations assistant (`/admin/assistant`) has no API of its own: its tools are read-only queries executed with the
+signed-in user's Supabase session (`src/lib/assistant/tools.ts`).

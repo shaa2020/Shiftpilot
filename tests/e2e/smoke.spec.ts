@@ -178,3 +178,19 @@ test.describe("automation and PWA", () => {
     expect(await offline.text()).toContain("You are offline");
   });
 });
+
+test.describe("production readiness", () => {
+  test("health endpoint reports status without exposing configuration values", async ({ request }) => {
+    const res = await request.get("/api/health");
+    expect([200, 503]).toContain(res.status());
+    const body = await res.json();
+    expect(body).toHaveProperty("status");
+    expect(typeof body.integrations.email).toBe("boolean");
+    expect(JSON.stringify(body)).not.toContain("ci-placeholder-anon-key");
+  });
+
+  test("two-factor challenge requires a session", async ({ page }) => {
+    await page.goto("/mfa");
+    await expect(page).toHaveURL(/\/login/);
+  });
+});
