@@ -3,7 +3,12 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { formatDateTime } from "@/lib/time";
+import { formatDate, formatDateTime } from "@/lib/time";
+import { NativeSelect, Textarea } from "@/components/ui/input";
+import { StatusBadge, humanize } from "@/components/ui/status-badge";
+import { ServerForm } from "@/components/forms/server-form";
+import { Field } from "@/components/forms/field";
+import { submitDataRequestAction } from "./privacy-actions";
 import { PageHeader } from "@/components/ui/feedback";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -19,10 +24,13 @@ const EVENT_LABEL: Record<string, string> = {
 export default async function AccountPage() {
   const user = await requireUser("/account");
   const supabase = await createClient();
-  const [{ data: profile }, { data: events }] = await Promise.all([
+  const [{ data: profile }, { data: events }, { data: requests }, { data: agencyRows }] = await Promise.all([
     supabase.from("profiles").select("full_name, phone, locale, email").eq("id", user.id).single(),
     supabase.from("user_sessions").select("id, event, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+    supabase.from("data_subject_requests").select("id, request_type, status, due_at, outcome, created_at").eq("subject_user_id", user.id).order("created_at", { ascending: false }).limit(20),
+    supabase.rpc("my_agencies"),
   ]);
+  const agencies = new Map<string, string>((agencyRows ?? []).map((a) => [a.agency_id, a.name]));
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
@@ -53,6 +61,28 @@ export default async function AccountPage() {
             </ul>
           </CardContent>
         </Card>
+        {agencies.size > 0 && (
+          <Card className="md:col-span-2">
+            <CardHeader><CardTitle>Your personal data</CardTitle><CardDescription>Ask for a copy of your data, a correction, or erasure. Some records (contracts, payroll, invoices) must be kept by law and are listed in the response.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              {!!requests?.length && (
+                <ul className="divide-y divide-border text-sm">
+                  {requests.map((r) => (
+                    <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                      <span>{humanize(r.request_type)} · requested {formatDate(r.created_at)}{r.outcome ? ` · ${r.outcome}` : ` · due ${formatDate(r.due_at)}`}</span>
+                      <StatusBadge status={r.status} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <ServerForm action={submitDataRequestAction} submitLabel="Send request" resetOnSuccess className="grid gap-3 sm:grid-cols-2" footerClassName="sm:col-span-2">
+                <Field name="agency_id" label="Organisation"><NativeSelect name="agency_id" defaultValue={agencies.size === 1 ? [...agencies.keys()][0] : ""}>{[<option key="" value="" disabled>Choose…</option>, ...[...agencies].map(([id, name]) => <option key={id} value={id}>{name}</option>)]}</NativeSelect></Field>
+                <Field name="request_type" label="Request"><NativeSelect name="request_type" defaultValue="access"><option value="access">Access — see my data</option><option value="export">Export — a copy of my data</option><option value="rectification">Correct my data</option><option value="erasure">Erase my data</option><option value="restriction">Restrict processing</option><option value="objection">Object to processing</option></NativeSelect></Field>
+                <div className="sm:col-span-2"><Field name="details" label="Details (optional)"><Textarea name="details" rows={2} /></Field></div>
+              </ServerForm>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </main>
   );

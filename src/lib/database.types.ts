@@ -7678,6 +7678,9 @@ export type Database = {
       accept_invitation: { Args: { p_token: string }; Returns: Json };
       accept_shift_request: { Args: { p_request_id: string; p_title?: string }; Returns: string[] };
       agency_approve_timesheet: { Args: { p_timesheet_id: string; p_comment?: string }; Returns: undefined };
+      anonymise_application: { Args: { p_application_id: string }; Returns: undefined };
+      anonymise_worker: { Args: { p_worker_id: string }; Returns: undefined };
+      apply_retention: { Args: never; Returns: Json };
       assign_worker: { Args: { p_shift_position_id: string; p_worker_id: string; p_override_reason?: string }; Returns: string };
       attendance_alerts: { Args: { p_agency_id: string }; Returns: { assignment_id: string; shift_id: string; worker_id: string; worker_name: string; shift_title: string; client_name: string; starts_at: string; alert: string; minutes_late: number }[] };
       bootstrap_agency: { Args: { p_name: string; p_slug: string; p_owner_user_id: string }; Returns: string };
@@ -7694,7 +7697,9 @@ export type Database = {
       create_credit_note: { Args: { p_invoice_id: string; p_reason: string }; Returns: string };
       create_shifts: { Args: { p: Json }; Returns: string[] };
       decide_attendance_correction: { Args: { p_correction_id: string; p_approve: boolean; p_note: string }; Returns: undefined };
+      decide_compliance_review: { Args: { p_review_id: string; p_outcome: Database["public"]["Enums"]["review_outcome"]; p_rationale: string; p_valid_until?: string; p_restrictions?: Json }; Returns: undefined };
       evaluate_worker_eligibility: { Args: { p_shift_position_id: string; p_worker_id: string }; Returns: Json };
+      export_subject_data: { Args: { p_agency_id: string; p_email: string }; Returns: Json };
       express_shift_interest: { Args: { p_shift_position_id: string; p_worker_id: string }; Returns: undefined };
       financial_summary: { Args: { p_agency_id: string; p_from: string; p_to: string }; Returns: Json };
       find_eligible_workers: { Args: { p_shift_position_id: string; p_include_ineligible?: boolean; p_limit?: number }; Returns: { worker_id: string; full_name: string; worker_number: string; engagement_type: Database["public"]["Enums"]["engagement_type"]; eligible: boolean; score: number; failures: Json; warnings: Json; notes: Json; explanation: Json }[] };
@@ -7705,6 +7710,7 @@ export type Database = {
       log_audit_event: { Args: { p_agency_id: string; p_action: string; p_table: string; p_record_id: string; p_context?: Json }; Returns: undefined };
       mark_freelancer_invoice_paid: { Args: { p_invoice_id: string; p_paid_on: string; p_reference: string }; Returns: undefined };
       mark_no_show: { Args: { p_assignment_id: string }; Returns: undefined };
+      my_agencies: { Args: never; Returns: { agency_id: string; name: string }[] };
       my_assignment_pay: { Args: { p_assignment_id: string }; Returns: { pay_basis: string; hourly_amount: number; fixed_fee: number; currency: string }[] };
       my_attendance_policy: { Args: { p_worker_id: string }; Returns: { location_verification_enabled: boolean; location_privacy_notice: string; timezone: string }[] };
       my_permissions: { Args: { p_agency_id: string }; Returns: string[] };
@@ -7724,9 +7730,11 @@ export type Database = {
       staff_record_attendance: { Args: { p_assignment_id: string; p_event_type: string; p_occurred_at: string; p_note: string }; Returns: string };
       submit_freelancer_invoice: { Args: { p_worker_id: string; p_supplier_invoice_number: string; p_invoice_date: string; p_timesheet_ids: string[]; p_vat_rate: number; p_payee_iban: string; p_payee_name: string }; Returns: string };
       timesheet_billing_preview: { Args: { p_timesheet_id: string }; Returns: { category: string; minutes: number; hourly_rate: number }[] };
+      verify_document: { Args: { p_document_id: string; p_approve: boolean; p_expires_on?: string; p_reason?: string }; Returns: undefined };
       withdraw_invitation: { Args: { p_invitation_id: string }; Returns: undefined };
       worker_activation_blockers: { Args: { p_worker_id: string }; Returns: string[] };
       worker_available_shifts: { Args: { p_worker_id: string }; Returns: { shift_position_id: string; shift_id: string; title: string; position_name: string; client_name: string; location_name: string; city: string; starts_at: string; ends_at: string; break_minutes: number; open_slots: number }[] };
+      worker_document_checklist: { Args: { p_worker_id: string }; Returns: { document_type_id: string; key: string; name: string; required: boolean; requires_expiry: boolean; is_sensitive: boolean; document_id: string; status: Database["public"]["Enums"]["verification_status"]; expires_on: string; current_version: number }[] };
     };
     Enums: {
       application_status: "new" | "screening" | "interview" | "assessment" | "offer" | "onboarding" | "hired" | "rejected" | "withdrawn";

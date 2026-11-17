@@ -45,6 +45,8 @@ export const ADMIN_NAV: NavSection[] = [
     items: [
       { href: "/admin/workers", label: "Workers", icon: "hardhat", anyOf: ["workers.read"] },
       { href: "/admin/recruitment", label: "Recruitment", icon: "megaphone", anyOf: ["recruitment.read"] },
+      { href: "/admin/documents", label: "Documents", icon: "file", anyOf: ["documents.read"] },
+      { href: "/admin/compliance", label: "Compliance", icon: "shield", anyOf: ["compliance.read"] },
     ],
   },
   {
@@ -63,6 +65,7 @@ export const ADMIN_NAV: NavSection[] = [
       { href: "/admin/configuration", label: "Configuration", icon: "sliders" },
       { href: "/admin/settings/team", label: "Team & access", icon: "users", anyOf: ["users.manage"] },
       { href: "/admin/settings/roles", label: "Roles & permissions", icon: "shield", anyOf: ["users.manage", "roles.manage"] },
+      { href: "/admin/privacy", label: "Privacy", icon: "shield", anyOf: ["gdpr.manage"] },
       { href: "/admin/audit-log", label: "Audit log", icon: "file", anyOf: ["audit.read"] },
     ],
   },
@@ -103,6 +106,7 @@ export const WORKER_NAV: NavSection[] = [
       { href: "/worker/schedule", label: "My schedule", icon: "calendar" },
       { href: "/worker/timesheets", label: "Timesheets", icon: "clock" },
       { href: "/worker/earnings", label: "Earnings", icon: "receipt" },
+      { href: "/worker/documents", label: "Documents", icon: "file" },
       { href: "/worker/profile", label: "My profile", icon: "users" },
     ],
   },

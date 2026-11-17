@@ -24,10 +24,11 @@ import {
   reviewClassificationAction, saveBusinessAction, setEmploymentContractStatusAction, setFreelancerAgreementStatusAction,
   setOnboardingTaskAction, setWorkerStatusAction, updatePrivateDetailsAction, updateWorkerProfileAction, verifyCertificateAction,
 } from "../actions";
+import { staffUploadDocumentAction } from "../../documents/actions";
 
 export const metadata: Metadata = { title: "Worker" };
 
-const TABS = ["profile", "compliance", "skills", "availability", "onboarding", "pathway", "notes"] as const;
+const TABS = ["profile", "compliance", "documents", "skills", "availability", "onboarding", "pathway", "notes"] as const;
 type Tab = (typeof TABS)[number];
 const DAYS = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const VERIFY: [string, string][] = [["not_submitted", "Not submitted"], ["pending", "Pending"], ["verified", "Verified"], ["rejected", "Rejected"], ["expired", "Expired"]];
@@ -110,6 +111,7 @@ export default async function WorkerDetailPage({ params, searchParams }: { param
         </Card>
       )}
       {tab === "compliance" && <Compliance workerId={id} ctx={ctx} />}
+      {tab === "documents" && <WorkerDocuments workerId={id} ctx={ctx} />}
       {tab === "skills" && <Skills workerId={id} ctx={ctx} />}
       {tab === "availability" && <Availability workerId={id} canWrite={canWrite} />}
       {tab === "onboarding" && <Onboarding workerId={id} canWrite={canWrite} />}
@@ -600,6 +602,42 @@ async function Notes({ workerId }: { workerId: string }) {
           </ul>
         )}
       </CardContent>
+    </Card>
+  );
+}
+
+async function WorkerDocuments({ workerId, ctx }: { workerId: string; ctx: Awaited<ReturnType<typeof requireStaff>> }) {
+  const supabase = await createClient();
+  const { data: list } = await supabase.rpc("worker_document_checklist", { p_worker_id: workerId });
+  const canUpload = ctx.can("documents.upload");
+  const upload = staffUploadDocumentAction.bind(null, { workerId });
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader><CardTitle>Documents</CardTitle><CardDescription>Required documents for this worker&apos;s pathway. Verify uploads in the <Link className="text-primary hover:underline" href="/admin/documents">documents queue</Link>.</CardDescription></CardHeader>
+      {!list?.length ? <EmptyState icon={Award} title="No document types configured" className="m-5" /> : (
+        <Table>
+          <THead><tr><TH>Type</TH><TH>Status</TH><TH>Expires</TH><TH className="text-right">Upload</TH></tr></THead>
+          <TBody>
+            {list.map((d) => (
+              <TR key={d.document_type_id}>
+                <TD><p className="font-medium">{d.name}{d.required && <span className="ml-2 text-xs text-warning">required</span>}</p>{d.document_id && d.current_version > 0 && <a className="text-xs text-primary hover:underline" href={`/api/documents/${d.document_id}`} target="_blank" rel="noopener">Open v{d.current_version}</a>}</TD>
+                <TD>{d.document_id ? <StatusBadge status={d.status ?? "pending"} /> : <span className="text-muted-foreground">Missing</span>}</TD>
+                <TD className="text-muted-foreground">{d.expires_on ?? "—"}</TD>
+                <TD className="text-right">
+                  {canUpload && (
+                    <ServerForm action={upload} submitLabel={d.document_id ? "New version" : "Upload"} pendingLabel="Uploading…" resetOnSuccess className="flex flex-wrap items-end justify-end gap-2" footerClassName="m-0">
+                      <input type="hidden" name="document_type_id" value={d.document_type_id} />
+                      <input type="hidden" name="document_id" value={d.document_id ?? ""} />
+                      <input name="file" type="file" aria-label={`File for ${d.name}`} accept="application/pdf,image/jpeg,image/png,image/webp" className="max-w-52 text-xs" />
+                      {!d.document_id && d.requires_expiry && <Input name="expires_on" type="date" aria-label="Expires on" className="h-8 w-36" />}
+                    </ServerForm>
+                  )}
+                </TD>
+              </TR>
+            ))}
+          </TBody>
+        </Table>
+      )}
     </Card>
   );
 }
