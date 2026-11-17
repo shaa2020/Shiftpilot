@@ -10,7 +10,15 @@
 | `IDENTIFIER_HASH_SALT` | recommended | server only | Long random string used to hash IPs/emails in rate-limit keys |
 | `RESEND_API_KEY` | optional | server only | Enables transactional email |
 | `EMAIL_FROM` | with Resend | server only | e.g. `ShiftPilot <no-reply@mail.example.nl>` (domain verified in Resend) |
-| `SENTRY_DSN` | optional | server only | Error monitoring (wiring planned for Phase 8) |
+| `SENTRY_DSN` | optional | server only | Sentry DSN; server errors are reported through `instrumentation.ts` `onRequestError` (no SDK, store endpoint) |
+| `CRON_SECRET` | yes for scheduled jobs | server only | Bearer secret checked by `/api/cron/*` (Vercel Cron sends it automatically). At least 16 characters; without it the cron endpoints always return 401 |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | optional | browser + server | Web Push public key (`npx web-push generate-vapid-keys`) |
+| `VAPID_PRIVATE_KEY` | with push | **server only** | Web Push private key |
+| `VAPID_SUBJECT` | with push | server only | `mailto:ops@example.nl` or an https URL |
+| `WHATSAPP_ACCESS_TOKEN` | optional | **server only** | WhatsApp Business Cloud API token; deliveries are opt-in per user |
+| `WHATSAPP_PHONE_NUMBER_ID` | with WhatsApp | server only | Sending phone number id |
+| `ANTHROPIC_API_KEY` | optional | **server only** | Enables the read-only operations assistant (`/admin/assistant`). Questions and looked-up data are sent to Anthropic — record this in the processing register |
+| `ENFORCE_STAFF_MFA` | no (default `false`) | server only | When `true`, agency staff must enrol and use TOTP MFA before opening Admin HQ |
 
 Test-only variables:
 

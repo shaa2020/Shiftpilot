@@ -270,7 +270,7 @@ declare
   v_apps int := 0;
   r record;
 begin
-  if not app.is_service_role() and current_user not in ('postgres', 'supabase_admin') then raise exception 'Not authorised' using errcode = '42501'; end if;
+  if not app.is_service_role() then raise exception 'Not authorised' using errcode = '42501'; end if;
   for r in select id from public.applications where retention_until < current_date and worker_id is null and email not like 'anonymised+%' loop
     perform app.anonymise_application(r.id);
     v_apps := v_apps + 1;

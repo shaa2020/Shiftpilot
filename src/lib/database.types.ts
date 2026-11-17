@@ -7692,12 +7692,14 @@ export type Database = {
       client_review_timesheet: { Args: { p_timesheet_id: string; p_approve: boolean; p_comment?: string }; Returns: undefined };
       client_shift_staff: { Args: { p_shift_id: string }; Returns: { assignment_id: string; worker_display_name: string; position_name: string; status: Database["public"]["Enums"]["assignment_status"]; checked_in_at: string; checked_out_at: string; professional_summary: string; certificates: string[]; languages: string[] }[] };
       client_team: { Args: { p_client_id: string }; Returns: { membership_id: string; full_name: string; email: string; role: Database["public"]["Enums"]["client_member_role"]; status: Database["public"]["Enums"]["record_status"]; can_request_staff: boolean; can_approve_timesheets: boolean; can_view_finance: boolean; can_manage_users: boolean; is_self: boolean }[] };
+      complete_notification_delivery: { Args: { p_id: string; p_status: string; p_provider?: string; p_message_id?: string; p_error?: string }; Returns: undefined };
       confirm_assignment: { Args: { p_assignment_id: string }; Returns: undefined };
       consume_rate_limit: { Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: boolean };
       create_credit_note: { Args: { p_invoice_id: string; p_reason: string }; Returns: string };
       create_shifts: { Args: { p: Json }; Returns: string[] };
       decide_attendance_correction: { Args: { p_correction_id: string; p_approve: boolean; p_note: string }; Returns: undefined };
       decide_compliance_review: { Args: { p_review_id: string; p_outcome: Database["public"]["Enums"]["review_outcome"]; p_rationale: string; p_valid_until?: string; p_restrictions?: Json }; Returns: undefined };
+      delivery_context: { Args: { p_ids: string[] }; Returns: { delivery_id: string; channel: string; email: string; phone: string; locale: string; title: string; body: string; link_path: string; agency_name: string; push_subscriptions: Json }[] };
       evaluate_worker_eligibility: { Args: { p_shift_position_id: string; p_worker_id: string }; Returns: Json };
       export_subject_data: { Args: { p_agency_id: string; p_email: string }; Returns: Json };
       express_shift_interest: { Args: { p_shift_position_id: string; p_worker_id: string }; Returns: undefined };
@@ -7719,6 +7721,7 @@ export type Database = {
       purge_rate_limits: { Args: never; Returns: number };
       record_attendance: { Args: { p_assignment_id: string; p_event_type: string; p_idempotency_key: string; p_device_time?: string; p_offline?: boolean; p_latitude?: number; p_longitude?: number; p_accuracy_m?: number }; Returns: Json };
       record_invoice_sent: { Args: { p_invoice_id: string; p_sent_to: string }; Returns: undefined };
+      register_push_subscription: { Args: { p_endpoint: string; p_p256dh: string; p_auth: string; p_user_agent?: string }; Returns: undefined };
       reject_shift_request: { Args: { p_request_id: string; p_reason: string }; Returns: undefined };
       replace_assignment: { Args: { p_assignment_id: string; p_new_worker_id: string; p_override_reason?: string }; Returns: string };
       request_invitation_clarification: { Args: { p_invitation_id: string; p_question: string }; Returns: undefined };
@@ -7727,6 +7730,7 @@ export type Database = {
       respond_to_assignment: { Args: { p_assignment_id: string; p_accept: boolean; p_reason?: string }; Returns: Database["public"]["Enums"]["assignment_status"] };
       respond_to_shift_invitation: { Args: { p_invitation_id: string; p_accept: boolean; p_reason?: string }; Returns: string };
       review_freelancer_invoice: { Args: { p_invoice_id: string; p_approve: boolean; p_note: string }; Returns: undefined };
+      run_scheduled_automations: { Args: never; Returns: Json };
       staff_record_attendance: { Args: { p_assignment_id: string; p_event_type: string; p_occurred_at: string; p_note: string }; Returns: string };
       submit_freelancer_invoice: { Args: { p_worker_id: string; p_supplier_invoice_number: string; p_invoice_date: string; p_timesheet_ids: string[]; p_vat_rate: number; p_payee_iban: string; p_payee_name: string }; Returns: string };
       timesheet_billing_preview: { Args: { p_timesheet_id: string }; Returns: { category: string; minutes: number; hourly_rate: number }[] };

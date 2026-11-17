@@ -23,7 +23,7 @@ test.describe("public pages", () => {
 });
 
 test.describe("access control", () => {
-  for (const path of ["/admin", "/admin/settings/team", "/admin/clients", "/admin/workers", "/admin/crm", "/admin/recruitment", "/admin/configuration", "/admin/shifts", "/admin/shifts/new", "/admin/schedule", "/admin/requests", "/admin/timesheets", "/admin/attendance", "/notifications", "/admin/finance", "/admin/invoices", "/admin/payroll", "/admin/purchase-invoices", "/admin/documents", "/admin/compliance", "/admin/privacy", "/worker/documents", "/client/invoices", "/client/pricing", "/worker/earnings", "/worker/offers", "/worker/schedule", "/worker/timesheets", "/worker/profile", "/client/requests", "/client/requests/new", "/client/shifts", "/client/timesheets", "/client/team", "/client", "/worker", "/portal", "/account"]) {
+  for (const path of ["/admin", "/admin/settings/team", "/admin/clients", "/admin/workers", "/admin/crm", "/admin/recruitment", "/admin/configuration", "/admin/shifts", "/admin/shifts/new", "/admin/schedule", "/admin/requests", "/admin/timesheets", "/admin/attendance", "/notifications", "/admin/finance", "/admin/invoices", "/admin/payroll", "/admin/purchase-invoices", "/admin/documents", "/admin/compliance", "/admin/privacy", "/worker/documents", "/admin/assistant", "/notifications/preferences", "/client/invoices", "/client/pricing", "/worker/earnings", "/worker/offers", "/worker/schedule", "/worker/timesheets", "/worker/profile", "/client/requests", "/client/requests/new", "/client/shifts", "/client/timesheets", "/client/team", "/client", "/worker", "/portal", "/account"]) {
     test(`${path} redirects signed-out visitors to login with a safe return path`, async ({ page }) => {
       await page.goto(path);
       await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path).replace(/[/]/g, "%2F")}`));
@@ -158,5 +158,23 @@ test.describe("privacy endpoints", () => {
     const res = await request.get("/api/privacy/export?email=someone@example.nl", { maxRedirects: 0 });
     expect([302, 307]).toContain(res.status());
     expect(res.headers()["location"]).toContain("/login");
+  });
+});
+
+test.describe("automation and PWA", () => {
+  test("cron endpoints reject requests without the secret", async ({ request }) => {
+    for (const path of ["/api/cron/dispatch", "/api/cron/automations"]) {
+      expect((await request.get(path)).status()).toBe(401);
+      expect((await request.get(path, { headers: { authorization: "Bearer wrong" } })).status()).toBe(401);
+    }
+  });
+
+  test("service worker and offline page are served", async ({ request }) => {
+    const sw = await request.get("/sw.js");
+    expect(sw.status()).toBe(200);
+    expect(await sw.text()).toContain("notificationclick");
+    const offline = await request.get("/offline");
+    expect(offline.status()).toBe(200);
+    expect(await offline.text()).toContain("You are offline");
   });
 });

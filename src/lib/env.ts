@@ -39,4 +39,14 @@ export const serverEnv = {
   resendApiKey: () => process.env.RESEND_API_KEY,
   emailFrom: () => process.env.EMAIL_FROM,
   sentryDsn: () => process.env.SENTRY_DSN,
+  cronSecret: () => process.env.CRON_SECRET,
+  vapidPrivateKey: () => process.env.VAPID_PRIVATE_KEY,
+  vapidSubject: () => process.env.VAPID_SUBJECT,
+  whatsappToken: () => process.env.WHATSAPP_ACCESS_TOKEN,
+  whatsappPhoneNumberId: () => process.env.WHATSAPP_PHONE_NUMBER_ID,
+  anthropicApiKey: () => process.env.ANTHROPIC_API_KEY,
+  enforceStaffMfa: () => process.env.ENFORCE_STAFF_MFA === "true",
 } as const;
+
+/** Public VAPID key for Web Push (safe to expose); absent = push awaiting configuration. */
+export const vapidPublicKey = () => process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;

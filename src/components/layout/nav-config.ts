@@ -22,7 +22,7 @@ export interface NavSection {
  * Modules are added as each roadmap phase ships (see DEVELOPMENT_STATUS.md).
  */
 export const ADMIN_NAV: NavSection[] = [
-  { items: [{ href: "/admin", label: "Dashboard", icon: "dashboard", anyOf: ["dashboard.view"] }] },
+  { items: [{ href: "/admin", label: "Dashboard", icon: "dashboard", anyOf: ["dashboard.view"] }, { href: "/admin/assistant", label: "Assistant", icon: "target", anyOf: ["dashboard.view"] }] },
   {
     label: "Operations",
     items: [

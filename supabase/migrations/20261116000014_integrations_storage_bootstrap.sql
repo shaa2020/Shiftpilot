@@ -161,7 +161,7 @@ declare
   v_agency uuid;
   v_owner_role uuid;
 begin
-  if not app.is_service_role() and current_user not in ('postgres', 'supabase_admin') then
+  if not app.is_service_role() and session_user not in ('postgres', 'supabase_admin') then
     raise exception 'bootstrap_agency may only be called with the service role' using errcode = '42501';
   end if;
   if not exists (select 1 from public.profiles where id = p_owner_user_id) then

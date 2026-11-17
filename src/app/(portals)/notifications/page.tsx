@@ -20,7 +20,7 @@ export default async function NotificationsPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <Link href="/portal" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" aria-hidden /> Back</Link>
-      <PageHeader title="Notifications" description={`${unread} unread`} actions={unread > 0 && <ConfirmAction action={markReadAction} title="Mark all as read?" variant="secondary">Mark all read</ConfirmAction>} />
+      <PageHeader title="Notifications" description={`${unread} unread`} actions={<div className="flex gap-2"><Link href="/notifications/preferences" className="inline-flex h-8 items-center rounded-md px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground">Preferences</Link>{unread > 0 && <ConfirmAction action={markReadAction} title="Mark all as read?" variant="secondary">Mark all read</ConfirmAction>}</div>} />
       <Card>
         {!data?.length ? <EmptyState icon={Bell} title="No notifications" className="m-5" /> : (
           <ul className="divide-y divide-border">

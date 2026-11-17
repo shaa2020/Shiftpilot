@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { Providers } from "@/components/layout/providers";
+import { ServiceWorkerRegister } from "@/components/layout/sw-register";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-dvh">
         <Providers nonce={nonce}>{children}</Providers>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

@@ -402,6 +402,21 @@ describe("function security", () => {
     expect(r.rows).toEqual([]);
   });
 
+  it("no SECURITY DEFINER function checks current_user (it is always the owner there)", async () => {
+    const r = await db.query(
+      `select n.nspname || '.' || p.proname as fn from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname in ('public', 'app') and p.prosecdef and p.prosrc ~* 'current_user\\s+(not\\s+)?in'`,
+    );
+    expect(r.rows).toEqual([]);
+  });
+
+  it("service-only functions are not executable by signed-in users", async () => {
+    for (const fn of ["public.run_scheduled_automations()", "public.apply_retention()", "public.claim_notification_deliveries(integer)", "public.delivery_context(uuid[])", "public.bootstrap_agency(text, text, uuid)"]) {
+      const r = await db.query("select has_function_privilege('authenticated', $1, 'execute') ok", [fn]);
+      expect(r.rows[0].ok, fn).toBe(false);
+    }
+  });
+
   it("every SECURITY DEFINER function pins an empty search_path", async () => {
     const r = await db.query(
       `select n.nspname || '.' || p.proname as fn from pg_proc p join pg_namespace n on n.oid = p.pronamespace
