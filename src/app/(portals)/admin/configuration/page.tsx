@@ -44,7 +44,7 @@ export default async function ConfigurationPage({ searchParams }: { searchParams
       <SectionTabs tabs={TABS.map((t) => ({ key: t, label: humanize(t), href: `/admin/configuration?tab=${t}` }))} active={tab} />
 
       {tab === "industries" && (
-        <div className="grid gap-6 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <Card className="xl:col-span-2">
             <CardHeader><CardTitle>Industries & categories</CardTitle></CardHeader>
             <CardContent className="px-0 pb-0">
@@ -101,7 +101,7 @@ async function Positions({ agencyId, industries, canWrite }: { agencyId: string;
   const supabase = await createClient();
   const { data: positions } = await supabase.from("job_positions").select("id, name, status, is_regulated, allows_freelancers, industries(name), job_categories(name), position_requirements(count)").eq("agency_id", agencyId).order("name");
   return (
-    <div className="grid gap-6 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <Card className="xl:col-span-2">
         <CardHeader><CardTitle>Job positions</CardTitle><CardDescription>Requirements on each position drive worker matching.</CardDescription></CardHeader>
         <CardContent className="px-0 pb-0">
@@ -148,7 +148,7 @@ async function Catalog({ agencyId, table, canWrite }: { agencyId: string; table:
   const { data: rows } = await supabase.from(table).select("*").eq("agency_id", agencyId).order("name");
   const Icon = table === "skills" ? Wrench : table === "certificates" ? Award : GraduationCap;
   return (
-    <div className="grid gap-6 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <Card className="xl:col-span-2">
         <CardHeader><CardTitle>{humanize(table)}</CardTitle></CardHeader>
         <CardContent className="px-0 pb-0">

@@ -110,7 +110,7 @@ export default async function WorkerShiftPage({ params }: { params: Promise<{ id
         </Card>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="space-y-4">
           <Card>
             <CardHeader><CardTitle>Where</CardTitle></CardHeader>
@@ -211,7 +211,7 @@ export default async function WorkerShiftPage({ params }: { params: Promise<{ id
                     <summary className="cursor-pointer font-medium text-primary">Something wrong? Request a correction</summary>
                     <ServerForm action={requestCorrectionAction} submitLabel="Request correction" resetOnSuccess className="mt-3">
                       <input type="hidden" name="timesheet_id" value={ts.data.id} />
-                      <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <Field name="proposed_start" label="Actual start"><Input name="proposed_start" type="datetime-local" defaultValue={isoToLocalInput(ts.data.actual_start)} /></Field>
                         <Field name="proposed_end" label="Actual end"><Input name="proposed_end" type="datetime-local" defaultValue={isoToLocalInput(ts.data.actual_end)} /></Field>
                       </div>

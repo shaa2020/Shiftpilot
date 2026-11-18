@@ -4,7 +4,7 @@ import type { Tables } from "@/lib/database.types";
 
 export function WorkerFields({ worker, isNew }: { worker?: Partial<Tables<"workers">>; isNew?: boolean }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <Field name="first_name" label="First name" required><Input name="first_name" defaultValue={worker?.first_name ?? ""} /></Field>
       <Field name="last_name" label="Last name" required><Input name="last_name" defaultValue={worker?.last_name ?? ""} /></Field>
       <Field name="display_name" label="Display name" hint="Shown to clients. Defaults to first name and last initial."><Input name="display_name" defaultValue={worker?.display_name ?? ""} /></Field>

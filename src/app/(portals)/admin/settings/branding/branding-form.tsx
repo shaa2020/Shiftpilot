@@ -35,7 +35,7 @@ export function BrandingForm({
   const fg = readableOn(color);
 
   return (
-    <form action={action} className="grid gap-6 lg:grid-cols-[1fr_20rem]" noValidate>
+    <form action={action} className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]" noValidate>
       <div className="space-y-6">
         {state.message && !state.ok && <Alert tone="danger">{state.message}</Alert>}
         <Card>

@@ -20,7 +20,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
     <>
       <AutoRefresh ms={30000} />
       <PageHeader title="Messages" description="Questions about a shift, your hours or documents? Message the agency here." />
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <InboxList items={items} base="/worker/messages" emptyText="Conversations with your agency will appear here." />
         <Card className="lg:sticky lg:top-24 lg:self-start">
           <CardHeader>

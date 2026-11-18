@@ -25,7 +25,7 @@ export default async function PayrollPage() {
     <>
       <PageHeader title="Payroll exports" description="Approved employee hours per payroll period, for your payroll provider." />
       <Alert tone="info" className="mb-6">ShiftPilot exports hours by category (regular, night, weekend, public holiday, overtime) with the gross hourly wage locked at confirmation. Wage tax, social security, pension and CAO allowances are calculated by your payroll provider, not by ShiftPilot.</Alert>
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="space-y-4 xl:col-span-2">
           {!periods?.length && <EmptyState icon={Landmark} title="No payroll periods yet" />}
           {(periods ?? []).map((p) => {

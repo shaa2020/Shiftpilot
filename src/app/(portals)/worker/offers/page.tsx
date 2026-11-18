@@ -104,7 +104,7 @@ export default async function OffersPage({ searchParams }: { searchParams: Promi
           {ctx.status !== "active" ? <Alert tone="info">Available once your onboarding is complete.</Alert>
             : open.length === 0 ? <EmptyState icon={Sparkles} title="No open shifts that match your profile right now" description="Keep your availability and skills up to date to see more." />
             : (
-              <ul className="grid gap-3 md:grid-cols-2">
+              <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {open.map((s) => (
                   <li key={s.shift_position_id}>
                     <ShiftCard s={{ title: s.title, starts_at: s.starts_at, ends_at: s.ends_at, break_minutes: s.break_minutes, position: s.position_name, client: s.client_name, location: s.location_name, city: s.city, chip: { label: `${s.open_slots} place${s.open_slots === 1 ? "" : "s"} left`, tone: "info" } }}>

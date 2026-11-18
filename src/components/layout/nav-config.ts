@@ -83,12 +83,23 @@ export interface ClientNavCaps { request: boolean; approve: boolean; finance: bo
 export const CLIENT_NAV: NavSection[] = [
   {
     items: [
-      { href: "/client", label: "Overview", icon: "dashboard" },
+      { href: "/client", label: "Overview", icon: "dashboard", short: "Home", tab: true },
+      { href: "/client/shifts", label: "Shifts", icon: "calendar", tab: true },
+      { href: "/client/timesheets", label: "Timesheets", icon: "clock", short: "Hours", tab: true },
+      { href: "/client/messages", label: "Messages", icon: "chat", tab: true },
+    ],
+  },
+  {
+    label: "Staffing",
+    items: [
       { href: "/client/requests", label: "Staffing requests", icon: "bell", short: "Requests" },
-      { href: "/client/shifts", label: "Shifts", icon: "calendar" },
-      { href: "/client/timesheets", label: "Timesheets", icon: "clock", short: "Hours" },
       { href: "/client/workers", label: "Workers & feedback", icon: "hardhat", short: "Workers" },
-      { href: "/client/messages", label: "Messages", icon: "chat" },
+      { href: "/client/locations", label: "Locations", icon: "building" },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
       { href: "/client/invoices", label: "Invoices", icon: "receipt" },
       { href: "/client/pricing", label: "Pricing", icon: "file" },
       { href: "/client/team", label: "Team", icon: "users" },
@@ -104,7 +115,7 @@ export function clientNav(caps: ClientNavCaps): NavSection[] {
     hide.add("/client/invoices");
     hide.add("/client/pricing");
   }
-  return CLIENT_NAV.map((s) => ({ ...s, items: s.items.filter((i) => !hide.has(i.href)) }));
+  return CLIENT_NAV.map((s) => ({ ...s, items: s.items.filter((i) => !hide.has(i.href)) })).filter((s) => s.items.length > 0);
 }
 
 export const WORKER_NAV: NavSection[] = [

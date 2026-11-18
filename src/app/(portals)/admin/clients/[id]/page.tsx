@@ -104,7 +104,7 @@ async function Locations({ clientId, canWrite }: { clientId: string; canWrite: b
   const supabase = await createClient();
   const { data: locations } = await supabase.from("client_locations").select("*").eq("client_id", clientId).order("name");
   return (
-    <div className="grid gap-6 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <Card className="xl:col-span-2">
         <CardHeader><CardTitle>Locations</CardTitle><CardDescription>Workplaces where shifts take place.</CardDescription></CardHeader>
         <CardContent className="px-0 pb-0">
@@ -174,7 +174,7 @@ async function Contacts({ clientId, canWrite }: { clientId: string; canWrite: bo
   const supabase = await createClient();
   const { data: contacts } = await supabase.from("client_contacts").select("*").eq("client_id", clientId).order("is_primary", { ascending: false }).order("full_name");
   return (
-    <div className="grid gap-6 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <Card className="xl:col-span-2">
         <CardHeader><CardTitle>Contacts</CardTitle><CardDescription>People at the client. Contacts do not get portal access — invite portal users separately.</CardDescription></CardHeader>
         <CardContent className="px-0 pb-0">
@@ -241,7 +241,7 @@ async function PortalUsers({ clientId, canWrite }: { clientId: string; canWrite:
   ]);
   const pending = (invites ?? []).filter((i) => new Date(i.expires_at) > new Date());
   return (
-    <div className="grid gap-6 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <div className="space-y-6 xl:col-span-2">
         <Card>
           <CardHeader><CardTitle>Portal users</CardTitle><CardDescription>Client managers who can sign in to the client portal.</CardDescription></CardHeader>
@@ -353,7 +353,7 @@ async function Contracts({ clientId, canWrite }: { clientId: string; canWrite: b
   const supabase = await createClient();
   const { data: contracts } = await supabase.from("client_contracts").select("*").eq("client_id", clientId).order("start_date", { ascending: false });
   return (
-    <div className="grid gap-6 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <Card className="xl:col-span-2">
         <CardHeader><CardTitle>Contracts</CardTitle><CardDescription>Framework agreements. Pricing is managed in rate cards.</CardDescription></CardHeader>
         <CardContent className="px-0 pb-0">
@@ -421,7 +421,7 @@ async function Pricing({ clientId, agencyId, canWrite }: { clientId: string; age
     supabase.from("client_locations").select("id, name").eq("client_id", clientId).order("name"),
   ]);
   return (
-    <div className="grid gap-6 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <div className="space-y-6 xl:col-span-2">
         {!cards?.length && <EmptyState title="No rate cards yet" description="A client needs an active rate card before assignments can be confirmed." />}
         {(cards ?? []).map((c) => (

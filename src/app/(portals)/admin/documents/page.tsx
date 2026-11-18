@@ -136,7 +136,7 @@ async function Requests({ agencyId, filter: raw, today, canRequest }: { agencyId
     canRequest ? supabase.from("workers").select("id, first_name, last_name, worker_number").eq("agency_id", agencyId).neq("status", "archived").order("first_name").limit(2000) : Promise.resolve({ data: [] }),
   ]);
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
       <div>
         <div className="mb-3 flex flex-wrap gap-1.5" role="group" aria-label="Filter requests">
           {REQUEST_FILTERS.map((f) => (
@@ -285,7 +285,7 @@ async function Types({ agencyId, canManage }: { agencyId: string; canManage: boo
   const supabase = await createClient();
   const { data } = await supabase.from("document_types").select("id, name, applies_to, required_for_engagement, requires_expiry, is_sensitive, retention_months, status").eq("agency_id", agencyId).in("applies_to", ["worker", "freelancer_business"]).order("name");
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface shadow-[var(--shadow-card)]">
         {(data ?? []).map((t) => (
           <li key={t.id} className={cn("flex flex-wrap items-center gap-2 px-4 py-3", t.status !== "active" && "opacity-60")}>

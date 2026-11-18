@@ -98,7 +98,7 @@ export default async function ShiftPage({ params, searchParams }: { params: Prom
       </div>
       {s.instructions && <Alert tone="info" title="Instructions" className="mb-6"><p className="whitespace-pre-wrap">{s.instructions}</p></Alert>}
 
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
           {(positions ?? []).map((p) => (
             <PositionCard key={p.id} shiftId={id} position={p} assignments={(assignments ?? []).filter((a) => a.shift_position_id === p.id)}

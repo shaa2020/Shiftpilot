@@ -61,7 +61,7 @@ async function Requests({ agencyId }: { agencyId: string }) {
                     <TD>
                       <a className="mb-2 inline-block text-sm text-primary hover:underline" href={`/api/privacy/export?email=${encodeURIComponent(r.subject_email)}`}>Download data export (JSON)</a>
                       {open && (
-                        <ServerForm action={updateRequestAction} submitLabel="Update" className="grid gap-2 sm:grid-cols-2" footerClassName="sm:col-span-2">
+                        <ServerForm action={updateRequestAction} submitLabel="Update" className="grid grid-cols-1 gap-2 sm:grid-cols-2" footerClassName="sm:col-span-2">
                           <input type="hidden" name="id" value={r.id} />
                           <Field name="status" label="Status"><NativeSelect name="status" defaultValue={r.status === "received" ? "verifying" : r.status}>{["verifying", "in_progress", "completed", "rejected"].map((s) => <option key={s} value={s}>{humanize(s)}</option>)}</NativeSelect></Field>
                           <Field name="retained" label="Retained records" hint="Comma-separated, e.g. payroll (7 yrs)"><Input name="retained" /></Field>
@@ -79,7 +79,7 @@ async function Requests({ agencyId }: { agencyId: string }) {
       <Card>
         <CardHeader><CardTitle>Log a request</CardTitle><CardDescription>Verify the requester&apos;s identity before releasing any data. Erasure requests are handled on the Anonymisation tab; records under legal retention stay.</CardDescription></CardHeader>
         <CardContent>
-          <ServerForm action={createRequestAction} submitLabel="Log request" resetOnSuccess className="grid gap-3 sm:grid-cols-3" footerClassName="sm:col-span-3">
+          <ServerForm action={createRequestAction} submitLabel="Log request" resetOnSuccess className="grid grid-cols-1 gap-3 sm:grid-cols-3" footerClassName="sm:col-span-3">
             <Field name="subject_email" label="Subject email"><Input name="subject_email" type="email" /></Field>
             <Field name="request_type" label="Type"><NativeSelect name="request_type" defaultValue="access">{REQUEST_TYPES.map((t) => <option key={t} value={t}>{humanize(t)}</option>)}</NativeSelect></Field>
             <Field name="details" label="Details"><Input name="details" /></Field>
@@ -101,7 +101,7 @@ async function Erasure({ agencyId }: { agencyId: string }) {
     <ConfirmAction action={anonymiseAction} fields={{ kind, id }} title={`Anonymise ${name}?`} description="Names, contact details, addresses, notes, availability and location data are removed permanently. Contracts, timesheets, payroll and invoices stay for legal retention but no longer identify the person. This cannot be undone." destructive variant="ghost" confirmLabel="Anonymise">Anonymise</ConfirmAction>
   );
   return (
-    <div className="grid gap-6 xl:grid-cols-2">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
       <Card className="overflow-hidden">
         <CardHeader><CardTitle>Inactive workers</CardTitle><CardDescription>Only inactive or archived workers without open assignments can be anonymised.</CardDescription></CardHeader>
         {!workers?.length ? <EmptyState icon={UserX} title="No inactive workers with personal data" className="m-5" /> : (
@@ -146,7 +146,7 @@ async function Register({ agencyId }: { agencyId: string }) {
       <Card>
         <CardHeader><CardTitle>Add or update an activity</CardTitle></CardHeader>
         <CardContent>
-          <ServerForm action={saveActivityAction} submitLabel="Save activity" resetOnSuccess className="grid gap-3 sm:grid-cols-2" footerClassName="sm:col-span-2">
+          <ServerForm action={saveActivityAction} submitLabel="Save activity" resetOnSuccess className="grid grid-cols-1 gap-3 sm:grid-cols-2" footerClassName="sm:col-span-2">
             <Field name="name" label="Name"><Input name="name" placeholder="Shift scheduling" /></Field>
             <Field name="lawful_basis" label="Lawful basis"><NativeSelect name="lawful_basis" defaultValue="contract">{BASES.map((b) => <option key={b} value={b}>{humanize(b)}</option>)}</NativeSelect></Field>
             <div className="sm:col-span-2"><Field name="purpose" label="Purpose"><Textarea name="purpose" rows={2} /></Field></div>
@@ -190,7 +190,7 @@ async function Retention({ agencyId }: { agencyId: string }) {
       <Card>
         <CardHeader><CardTitle>Set a retention period</CardTitle></CardHeader>
         <CardContent>
-          <ServerForm action={saveRetentionAction} submitLabel="Save" resetOnSuccess className="grid gap-3 sm:grid-cols-3" footerClassName="sm:col-span-3">
+          <ServerForm action={saveRetentionAction} submitLabel="Save" resetOnSuccess className="grid grid-cols-1 gap-3 sm:grid-cols-3" footerClassName="sm:col-span-3">
             <Field name="data_category" label="Category"><Input name="data_category" placeholder="Rejected applicants" /></Field>
             <Field name="table_name" label="Table"><Input name="table_name" placeholder="applications" /></Field>
             <Field name="retention_months" label="Months"><Input name="retention_months" type="number" min={1} max={1200} /></Field>
@@ -236,7 +236,7 @@ async function Breaches({ agencyId }: { agencyId: string }) {
       <Card>
         <CardHeader><CardTitle>Record a breach</CardTitle></CardHeader>
         <CardContent>
-          <ServerForm action={recordBreachAction} submitLabel="Record breach" resetOnSuccess className="grid gap-3 sm:grid-cols-2" footerClassName="sm:col-span-2">
+          <ServerForm action={recordBreachAction} submitLabel="Record breach" resetOnSuccess className="grid grid-cols-1 gap-3 sm:grid-cols-2" footerClassName="sm:col-span-2">
             <Field name="detected_at" label="Detected at"><Input name="detected_at" type="datetime-local" /></Field>
             <Field name="approx_subjects" label="Approx. people affected"><Input name="approx_subjects" inputMode="numeric" /></Field>
             <div className="sm:col-span-2"><Field name="description" label="What happened"><Textarea name="description" rows={2} /></Field></div>

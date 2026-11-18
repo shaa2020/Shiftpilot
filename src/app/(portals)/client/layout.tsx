@@ -4,10 +4,19 @@ import { getMemberships, requireClient } from "@/lib/auth/session";
 import { availablePortals } from "@/lib/auth/portal";
 import { getBranding } from "@/lib/branding";
 import { unreadCount } from "@/lib/messages/data";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function ClientLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireClient();
-  const [memberships, brand, unread] = await Promise.all([getMemberships(), getBranding(ctx.agencyId), unreadCount(ctx.agencyId)]);
+  const supabase = await createClient();
+  const [memberships, brand, unread, toApprove] = await Promise.all([
+    getMemberships(),
+    getBranding(ctx.agencyId),
+    unreadCount(ctx.agencyId),
+    ctx.capabilities.approve
+      ? supabase.from("timesheets").select("id", { count: "exact", head: true }).eq("client_id", ctx.clientId).eq("status", "submitted")
+      : Promise.resolve({ count: 0 }),
+  ]);
   return (
     <AppShell
       portalLabel="Client"
@@ -16,7 +25,7 @@ export default async function ClientLayout({ children }: { children: React.React
       user={ctx.user}
       canSwitchPortal={availablePortals(memberships).length > 1}
       brand={{ color: brand.brandColor, logoUrl: brand.logoUrl, name: brand.agencyName }}
-      badges={{ "/client/messages": unread }}
+      badges={{ "/client/messages": unread, "/client/timesheets": toApprove.count ?? 0 }}
     >
       {children}
     </AppShell>

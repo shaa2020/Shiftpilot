@@ -38,7 +38,7 @@ export default async function NewShiftPage() {
       <ServerForm action={createShiftAction} submitLabel="Create shift" pendingLabel="Creating…" toastOnSuccess={false} className="space-y-6">
         <Card>
           <CardHeader><CardTitle>Where and when</CardTitle></CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field name="location_id" label="Client location" required className="sm:col-span-2">
               <NativeSelect name="location_id" defaultValue="">
                 <option value="" disabled>Choose…</option>
@@ -60,7 +60,7 @@ export default async function NewShiftPage() {
         </Card>
         <Card>
           <CardHeader><CardTitle>Position</CardTitle><CardDescription>Add more positions on the shift page after creating it.</CardDescription></CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-3">
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field name="position_id" label="Position" required><NativeSelect name="position_id" defaultValue="">{[<option key="" value="" disabled>Choose…</option>, ...positions.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.industries?.name})</option>)]}</NativeSelect></Field>
             <Field name="headcount" label="Workers needed" required><Input name="headcount" type="number" min={1} max={500} defaultValue={1} /></Field>
             <Field name="required_language_code" label="Required language"><Input name="required_language_code" maxLength={2} placeholder="nl" /></Field>
@@ -69,7 +69,7 @@ export default async function NewShiftPage() {
         </Card>
         <Card>
           <CardHeader><CardTitle>Details</CardTitle></CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field name="dress_code" label="Dress code"><Input name="dress_code" /></Field>
             <Field name="status" label="Publish">
               <NativeSelect name="status" defaultValue="open"><option value="open">Open — ready for matching</option><option value="draft">Draft — not visible yet</option></NativeSelect>

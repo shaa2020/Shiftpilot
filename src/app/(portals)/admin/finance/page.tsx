@@ -91,13 +91,13 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
         </Card>
         <Card className="xl:col-span-3">
           <CardHeader><CardTitle>Public holidays</CardTitle><CardDescription>Used for holiday rates on invoices and payroll categories. Enter the holidays that apply under your contracts/CAO — none are assumed.</CardDescription></CardHeader>
-          <CardContent className="grid gap-6 md:grid-cols-2">
+          <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <ul className="space-y-1 text-sm">
               {(holidays ?? []).map((h) => <li key={h.id} className="flex items-center justify-between">{h.holiday_date} · {h.name}{ctx.can("rates.write") && <ConfirmAction action={removeHolidayAction} fields={{ id: h.id }} title="Remove holiday?" variant="ghost" destructive confirmLabel="Remove">Remove</ConfirmAction>}</li>)}
               {!holidays?.length && <li className="text-muted-foreground">No holidays configured for this year.</li>}
             </ul>
             {ctx.can("rates.write") && (
-              <ServerForm action={addHolidayAction} submitLabel="Add holiday" resetOnSuccess className="grid gap-3 sm:grid-cols-2" footerClassName="sm:col-span-2">
+              <ServerForm action={addHolidayAction} submitLabel="Add holiday" resetOnSuccess className="grid grid-cols-1 gap-3 sm:grid-cols-2" footerClassName="sm:col-span-2">
                 <Field name="holiday_date" label="Date"><Input name="holiday_date" type="date" /></Field>
                 <Field name="name" label="Name"><Input name="name" /></Field>
               </ServerForm>

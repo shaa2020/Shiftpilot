@@ -32,7 +32,7 @@ export default async function AnnouncementsPage() {
   return (
     <>
       <PageHeader title="Announcements" description="Post news to workers, clients or your team. They see it on their home screen and get a notification." />
-      <div className="grid gap-6 lg:grid-cols-[22rem_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
         <Card className="lg:sticky lg:top-24 lg:self-start">
           <CardHeader>
             <CardTitle>New announcement</CardTitle>

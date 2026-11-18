@@ -39,7 +39,7 @@ export default async function ClientWorkersPage() {
         title="Workers & feedback"
         description="Rate the people who worked for you and choose favourites. Preferred workers are offered your shifts first; blocked workers are never scheduled for you."
       />
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Rate recent shifts</CardTitle>

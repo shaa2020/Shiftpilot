@@ -45,7 +45,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <ArrowLeft className="size-4" aria-hidden /> Back
       </Link>
       <PageHeader title="Account & security" actions={<ThemeToggle />} />
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card>
           <CardHeader><CardTitle>Profile</CardTitle></CardHeader>
           <CardContent>{profile && <ProfileForm profile={profile} />}</CardContent>
@@ -98,7 +98,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                   ))}
                 </ul>
               )}
-              <ServerForm action={submitDataRequestAction} submitLabel="Send request" resetOnSuccess className="grid gap-3 sm:grid-cols-2" footerClassName="sm:col-span-2">
+              <ServerForm action={submitDataRequestAction} submitLabel="Send request" resetOnSuccess className="grid grid-cols-1 gap-3 sm:grid-cols-2" footerClassName="sm:col-span-2">
                 <Field name="agency_id" label="Organisation"><NativeSelect name="agency_id" defaultValue={agencies.size === 1 ? [...agencies.keys()][0] : ""}>{[<option key="" value="" disabled>Choose…</option>, ...[...agencies].map(([id, name]) => <option key={id} value={id}>{name}</option>)]}</NativeSelect></Field>
                 <Field name="request_type" label="Request"><NativeSelect name="request_type" defaultValue="access"><option value="access">Access — see my data</option><option value="export">Export — a copy of my data</option><option value="rectification">Correct my data</option><option value="erasure">Erase my data</option><option value="restriction">Restrict processing</option><option value="objection">Object to processing</option></NativeSelect></Field>
                 <div className="sm:col-span-2"><Field name="details" label="Details (optional)"><Textarea name="details" rows={2} /></Field></div>

@@ -62,6 +62,11 @@ Invoice generation from approved timesheets (weekend/night/holiday classificatio
 - Requests: ask one worker, several, or everyone missing a type; message and due date; reminders (manual and daily for overdue); worker uploads straight onto the request.
 - Worker documents: progress of required documents, requests first, rejection reasons, expiry warnings, view own file; agency-issued documents read-only.
 
+### Client portal & employee profile ✅
+- Client: overview with quick actions, attention banners (hours to approve, unstaffed shifts within 48 h, overdue invoices), on-site-now list; shifts by day with staffing bars; detailed shift page with worker cards; timesheet cards with bulk approve; requests with progress and "request again"; invoice cards with year total; locations page; organised menu and phone tab bar.
+- Employee profile (Admin HQ): header with key figures (shifts, hours, rating, documents, no-shows), call/email/message, Overview tab with upcoming/recent shifts, contact and skills. Worker's own profile shows completeness.
+- Layout: every responsive grid has a phone column so content can never be wider than the screen.
+
 ### Worker portal ✅
 - Organised shift page with phone action bar, single-shift calendar file, day-grouped schedule, richer offers, home overview, timesheet cards.
 
@@ -93,7 +98,7 @@ Invoice generation from approved timesheets (weekend/night/holiday classificatio
 | --- | --- |
 | Unit (Vitest) | 83 / 83 passed (25 files) |
 | Database (incl. MFA enforcement, engagement, document requests) | 120 / 120 passed (11 files) |
-| Signed-in E2E against a local Supabase stack (desktop + phone) | 57 / 57 passed |
+| Signed-in E2E against a local Supabase stack (desktop + phone) | 63 / 63 passed |
 | E2E smoke (desktop + mobile) | 126 / 128 against a live stack; the 2 others check the "database unreachable" fallback and only apply without a database |
 | Lint, typecheck, production build | passed |
 

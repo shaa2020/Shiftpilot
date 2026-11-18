@@ -28,7 +28,7 @@ export default async function AdminMessagesPage({ searchParams }: { searchParams
     <>
       <AutoRefresh ms={30000} />
       <PageHeader title="Messages" description="Conversations with workers and clients. Threads waiting for a reply are highlighted." />
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <InboxList items={items} base="/admin/messages" showParty emptyText="Start a conversation with a worker or client, or wait for them to message you." />
         <Card className="lg:sticky lg:top-24 lg:self-start">
           <CardHeader>

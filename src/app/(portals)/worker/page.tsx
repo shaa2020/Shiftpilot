@@ -97,7 +97,7 @@ export default async function WorkerHome() {
         </Link>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <Card className="overflow-hidden">
           <div className="h-1.5 bg-gradient-to-r from-primary to-primary/40" aria-hidden />
           <CardHeader className="pb-2"><CardTitle className="text-base text-muted-foreground">Next shift</CardTitle></CardHeader>
@@ -180,7 +180,7 @@ export default async function WorkerHome() {
             <h2 className="font-semibold">Coming up</h2>
             <Link href="/worker/schedule" className="text-sm text-primary">All shifts</Link>
           </div>
-          <ul className="grid gap-2 md:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-2 md:grid-cols-3">
             {later.map((a) => (
               <li key={a.id}>
                 <ShiftCard s={{ href: `/worker/shifts/${a.id}`, title: a.shifts?.title ?? "Shift", starts_at: a.starts_at, ends_at: a.ends_at, break_minutes: a.shifts?.break_minutes, client: a.shifts?.clients?.name, location: a.shifts?.client_locations?.name, city: a.shifts?.client_locations?.city, status: a.status }} />

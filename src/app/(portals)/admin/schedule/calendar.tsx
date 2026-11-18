@@ -45,7 +45,7 @@ export function ScheduleCalendar({ clients, locations, positions, workers, canEd
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-2 sm:grid-cols-5">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-5">
         <NativeSelect value={filters.client} onChange={set("client")} aria-label="Client"><option value="">All clients</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</NativeSelect>
         <NativeSelect value={filters.location} onChange={set("location")} aria-label="Location"><option value="">All locations</option>{locations.filter((l) => !filters.client || l.client_id === filters.client).map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</NativeSelect>
         <NativeSelect value={filters.position} onChange={set("position")} aria-label="Position"><option value="">All positions</option>{positions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</NativeSelect>

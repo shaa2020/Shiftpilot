@@ -91,7 +91,7 @@ async function Reviews({ agencyId, canDecide }: { agencyId: string; canDecide: b
                   <TD>
                     {r.status !== "pending" ? <p className="text-sm text-muted-foreground">{r.rationale}{r.decided_at ? ` (${formatDate(r.decided_at)})` : ""}</p>
                       : canDecide && r.review_type !== "freelancer_classification" ? (
-                        <ServerForm action={decideReviewAction} submitLabel="Record decision" className="grid gap-2 sm:grid-cols-2" footerClassName="sm:col-span-2">
+                        <ServerForm action={decideReviewAction} submitLabel="Record decision" className="grid grid-cols-1 gap-2 sm:grid-cols-2" footerClassName="sm:col-span-2">
                           <input type="hidden" name="id" value={r.id} />
                           <Field name="outcome" label="Outcome"><NativeSelect name="outcome" defaultValue="approved"><option value="approved">Approved</option><option value="restricted">Restricted</option><option value="rejected">Rejected</option></NativeSelect></Field>
                           <Field name="valid_until" label="Valid until"><Input name="valid_until" type="date" /></Field>
@@ -111,7 +111,7 @@ async function Reviews({ agencyId, canDecide }: { agencyId: string; canDecide: b
           <CardHeader><CardTitle>Open a regulated-position review</CardTitle><CardDescription>Workers can only be matched to positions marked regulated after an approved review.</CardDescription></CardHeader>
           <CardContent>
             {!positions?.length ? <p className="text-sm text-muted-foreground">No positions are marked as regulated. Set this under <Link className="text-primary hover:underline" href="/admin/configuration?tab=positions">Configuration</Link>.</p> : (
-              <ServerForm action={requestPositionReviewAction} submitLabel="Open review" resetOnSuccess className="grid gap-3 sm:grid-cols-3" footerClassName="sm:col-span-3">
+              <ServerForm action={requestPositionReviewAction} submitLabel="Open review" resetOnSuccess className="grid grid-cols-1 gap-3 sm:grid-cols-3" footerClassName="sm:col-span-3">
                 <Field name="worker_id" label="Worker"><NativeSelect name="worker_id" defaultValue="">{[<option key="" value="" disabled>Choose…</option>, ...(workers ?? []).map((w) => <option key={w.id} value={w.id}>{w.last_name}, {w.first_name}</option>)]}</NativeSelect></Field>
                 <Field name="position_id" label="Position"><NativeSelect name="position_id" defaultValue="">{[<option key="" value="" disabled>Choose…</option>, ...positions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)]}</NativeSelect></Field>
                 <Field name="notes" label="Notes"><Input name="notes" /></Field>
@@ -160,7 +160,7 @@ async function Rules({ agencyId, canEdit }: { agencyId: string; canEdit: boolean
         <Card>
           <CardHeader><CardTitle>New rule or new version</CardTitle><CardDescription>Using an existing key creates the next version as a draft.</CardDescription></CardHeader>
           <CardContent>
-            <ServerForm action={createRuleAction} submitLabel="Create draft" resetOnSuccess className="grid gap-3 sm:grid-cols-2" footerClassName="sm:col-span-2">
+            <ServerForm action={createRuleAction} submitLabel="Create draft" resetOnSuccess className="grid grid-cols-1 gap-3 sm:grid-cols-2" footerClassName="sm:col-span-2">
               <Field name="rule_key" label="Rule key"><Input name="rule_key" placeholder="working_time.max_shift" /></Field>
               <Field name="name" label="Name"><Input name="name" /></Field>
               <Field name="category" label="Category"><NativeSelect name="category" defaultValue="working_time">{CATEGORIES.map((c) => <option key={c} value={c}>{humanize(c)}</option>)}</NativeSelect></Field>

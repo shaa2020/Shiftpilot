@@ -37,7 +37,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
   const owners = [...new Map((staff.data ?? []).map((s) => [s.user_id, s.profiles?.full_name ?? s.profiles?.email ?? ""])).entries()];
 
   const fields = (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <Field name="company_name" label="Company" required><Input name="company_name" defaultValue={lead.company_name} /></Field>
       <Field name="contact_name" label="Contact"><Input name="contact_name" defaultValue={lead.contact_name ?? ""} /></Field>
       <Field name="email" label="Email"><Input name="email" type="email" defaultValue={lead.email ?? ""} /></Field>
@@ -73,13 +73,13 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
         </Card>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
           <Card>
             <CardHeader><CardTitle>Activity</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               {canWrite && (
-                <ServerForm action={addActivityAction.bind(null, id)} submitLabel="Log activity" resetOnSuccess className="grid gap-3 sm:grid-cols-3" footerClassName="sm:col-span-3">
+                <ServerForm action={addActivityAction.bind(null, id)} submitLabel="Log activity" resetOnSuccess className="grid grid-cols-1 gap-3 sm:grid-cols-3" footerClassName="sm:col-span-3">
                   <Field name="activity_type" label="Type"><NativeSelect name="activity_type" defaultValue="note">{["note", "call", "email", "meeting", "task"].map((t) => <option key={t} value={t}>{humanize(t)}</option>)}</NativeSelect></Field>
                   <Field name="subject" label="Subject"><Input name="subject" /></Field>
                   <Field name="due_at" label="Due (tasks)"><Input name="due_at" type="datetime-local" /></Field>

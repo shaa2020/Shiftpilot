@@ -23,7 +23,7 @@ export default async function ClientTeamPage() {
   return (
     <>
       <PageHeader title="Team" description={`People at ${ctx.clientName} with access to this portal.`} />
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader><CardTitle>Members</CardTitle></CardHeader>
           <CardContent>

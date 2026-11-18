@@ -247,7 +247,7 @@ export default function Home() {
               <h2 className="mt-2 text-3xl font-semibold tracking-tight">Built so mistakes and misuse are hard by design.</h2>
               <p className="mt-4 text-slate-300">Rules live in the database, not just the screen — so they hold for every portal, every integration and every user.</p>
             </div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:col-span-2">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:col-span-2">
               {TRUST.map(({ Icon, title, text }) => (
                 <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-5">
                   <Icon className="size-5 text-sky-300" aria-hidden />

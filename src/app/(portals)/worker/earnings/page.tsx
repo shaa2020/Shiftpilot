@@ -28,7 +28,7 @@ export default async function EarningsPage() {
     return (
       <>
         <PageHeader title="Earnings" description="Approved hours are paid through payroll according to your employment contract." />
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card>
             <CardHeader><CardTitle>Approved hours</CardTitle><CardDescription>{hoursLabel(total)} h across the last {ts?.length ?? 0} approved shifts</CardDescription></CardHeader>
             <CardContent>
@@ -61,7 +61,7 @@ export default async function EarningsPage() {
   return (
     <>
       <PageHeader title="Earnings" description="Invoice the agency for your approved assignments. This is separate from payroll." />
-      <div className="grid gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
         <Card className="lg:col-span-3">
           <CardHeader><CardTitle>Approved, not yet invoiced</CardTitle><CardDescription>Amounts use the commercial rate agreed for each assignment.</CardDescription></CardHeader>
           <CardContent>

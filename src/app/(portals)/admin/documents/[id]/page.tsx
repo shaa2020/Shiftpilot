@@ -61,7 +61,7 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
       {d.archived_at && <Alert tone="warning" className="mb-4">Archived on {formatDate(d.archived_at)}. The file history is kept for the retention period.</Alert>}
       {d.status === "rejected" && d.rejection_reason && <Alert tone="danger" title="Rejected" className="mb-4">{d.rejection_reason}</Alert>}
 
-      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <div className="space-y-5">
           <Card className="overflow-hidden">
             <CardHeader className="flex-row items-center justify-between gap-2">

@@ -45,7 +45,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
   };
 
   const positionFields = (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <Field name="industry_id" label="Industry"><NativeSelect name="industry_id" defaultValue={p.industry_id}>{(industries.data ?? []).map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}</NativeSelect></Field>
       <Field name="category_id" label="Category"><NativeSelect name="category_id" defaultValue={p.category_id ?? ""}><option value="">None</option>{(industries.data ?? []).flatMap((i) => i.job_categories.filter((c) => c.status === "active").map((c) => <option key={c.id} value={c.id}>{`${i.name} › ${c.name}`}</option>))}</NativeSelect></Field>
       <Field name="name" label="Name" required><Input name="name" defaultValue={p.name} /></Field>
@@ -61,7 +61,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
     <>
       <Link href="/admin/configuration" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" aria-hidden /> Configuration</Link>
       <PageHeader title={p.name} description={p.industries?.name} actions={<div className="space-x-1">{p.is_regulated && <Badge tone="warning">Regulated</Badge>}{p.allows_freelancers && <Badge>Freelancers allowed</Badge>}</div>} />
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
           <Card>
             <CardHeader><CardTitle>Requirements</CardTitle><CardDescription>Mandatory requirements can never be overridden during matching. Preferred requirements improve the match score.</CardDescription></CardHeader>

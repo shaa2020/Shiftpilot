@@ -73,10 +73,10 @@ test("freelancer checks in, takes a break and checks out", async ({ page }) => {
 test("client approves the submitted hours", async ({ page }) => {
   await signIn(page, USERS.client);
   await page.goto("/client/timesheets");
-  const row = page.getByRole("row").filter({ hasText: title });
+  const row = page.locator("li").filter({ hasText: title }).filter({ has: page.getByRole("button", { name: "Approve", exact: true }) }).last();
   await expect(row).toBeVisible();
   await expect(row).toContainText("Zoë Z.");
-  await confirmAction(page, row.getByRole("button", { name: "Approve" }));
+  await confirmAction(page, row.getByRole("button", { name: "Approve", exact: true }));
 });
 
 test("agency approves client-approved timesheets in bulk", async ({ page }) => {

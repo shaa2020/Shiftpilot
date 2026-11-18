@@ -87,7 +87,7 @@ async function Openings({ agencyId, canWrite }: { agencyId: string; canWrite: bo
     supabase.from("industries").select("id, name").eq("agency_id", agencyId).eq("status", "active").order("sort_order"),
   ]);
   return (
-    <div className="grid gap-6 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <Card className="xl:col-span-2">
         <CardHeader><CardTitle>Job openings</CardTitle></CardHeader>
         <CardContent className="px-0 pb-0">

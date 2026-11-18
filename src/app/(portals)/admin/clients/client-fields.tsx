@@ -4,7 +4,7 @@ import type { Tables } from "@/lib/database.types";
 
 export function ClientFields({ client, industries }: { client?: Partial<Tables<"clients">>; industries: { id: string; name: string }[] }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <Field name="name" label="Client name" required><Input name="name" defaultValue={client?.name ?? ""} /></Field>
       <Field name="legal_name" label="Legal name"><Input name="legal_name" defaultValue={client?.legal_name ?? ""} /></Field>
       <Field name="kvk_number" label="KvK number"><Input name="kvk_number" inputMode="numeric" defaultValue={client?.kvk_number ?? ""} /></Field>

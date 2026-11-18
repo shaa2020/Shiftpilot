@@ -31,7 +31,7 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageHeader title="Invoices" description="Client invoices generated from approved timesheets and their confirmed rates." />
-      <div className="grid gap-6 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
         <div className="xl:col-span-3">
           <ListFilters showSearch={false} selects={[{ name: "status", label: "Status", value: status, options: STATUSES.map((s) => [s, humanize(s)]) }]} />
           <Card className="overflow-hidden">

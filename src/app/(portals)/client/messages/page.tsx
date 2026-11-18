@@ -12,14 +12,15 @@ import { AutoRefresh } from "@/components/messages/auto-refresh";
 
 export const metadata: Metadata = { title: "Messages" };
 
-export default async function MessagesPage() {
+export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ subject?: string }> }) {
   const ctx = await requireClient();
+  const { subject } = await searchParams;
   const items = await listConversations(ctx.agencyId);
   return (
     <>
       <AutoRefresh ms={30000} />
       <PageHeader title="Messages" description="Message your agency about staffing, timesheets or invoices." />
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <InboxList items={items} base="/client/messages" emptyText="Conversations with your agency will appear here." />
         <Card className="lg:sticky lg:top-24 lg:self-start">
           <CardHeader>
@@ -32,7 +33,7 @@ export default async function MessagesPage() {
               <input type="hidden" name="agency_id" value={ctx.agencyId} />
               <input type="hidden" name="client_id" value={ctx.clientId} />
               <Field name="subject" label="Subject">
-                <Input name="subject" maxLength={160} />
+                <Input name="subject" maxLength={160} defaultValue={subject?.slice(0, 160) ?? ""} />
               </Field>
               <Field name="body" label="Message" required>
                 <Textarea name="body" rows={4} maxLength={5000} />

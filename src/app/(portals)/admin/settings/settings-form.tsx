@@ -37,7 +37,7 @@ export function AgencySettingsForm({ agency, settings }: { agency: Agency; setti
           <CardTitle>Company details</CardTitle>
           <CardDescription>Shown on invoices and contracts.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField id="name" label="Trading name" error={e.name} required>
             <Input name="name" defaultValue={agency.name} />
           </FormField>
@@ -73,7 +73,7 @@ export function AgencySettingsForm({ agency, settings }: { agency: Agency; setti
           <CardTitle>Invoicing defaults</CardTitle>
           <CardDescription>Used for new clients and invoices. Client-specific terms override these.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField id="iban" label="IBAN" error={e.iban}>
             <Input name="iban" defaultValue={settings.iban ?? ""} autoComplete="off" />
           </FormField>
@@ -97,7 +97,7 @@ export function AgencySettingsForm({ agency, settings }: { agency: Agency; setti
             public registers.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField id="waadi_registration_number" label="Waadi registration number" error={e.waadi_registration_number}>
             <Input name="waadi_registration_number" defaultValue={settings.waadi_registration_number ?? ""} />
           </FormField>
@@ -123,7 +123,7 @@ export function AgencySettingsForm({ agency, settings }: { agency: Agency; setti
             recorded only at check-in and check-out — never continuously.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField id="late_threshold_minutes" label="Late after (minutes)" error={e.late_threshold_minutes}>
             <Input name="late_threshold_minutes" type="number" min={0} max={120} defaultValue={settings.late_threshold_minutes} />
           </FormField>

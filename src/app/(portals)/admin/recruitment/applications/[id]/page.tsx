@@ -69,7 +69,7 @@ export default async function ApplicationPage({ params }: { params: Promise<{ id
         </Card>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
           <Card>
             <CardHeader><CardTitle>Application</CardTitle></CardHeader>

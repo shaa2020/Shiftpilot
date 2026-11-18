@@ -128,7 +128,7 @@ export default async function WorkerDocumentsPage() {
       {open.length > 0 && (
         <section className="mb-8" aria-labelledby="requested">
           <h2 id="requested" className="mb-3 flex items-center gap-2 text-lg font-semibold"><Inbox className="size-5 text-primary" aria-hidden /> Requested by your agency</h2>
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {open.map((r) => {
               const due = r.status === "open" ? dueLabel(r.due_on, today) : null;
               const rejected = r.document_status === "rejected" && r.status === "open";
@@ -156,14 +156,14 @@ export default async function WorkerDocumentsPage() {
           {required.length > 0 && (
             <section className="mb-8" aria-labelledby="required">
               <h2 id="required" className="mb-3 text-lg font-semibold">Required</h2>
-              <div className="grid gap-3 md:grid-cols-2">{required.map((d) => <DocCard key={d.document_type_id} d={d} />)}</div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">{required.map((d) => <DocCard key={d.document_type_id} d={d} />)}</div>
             </section>
           )}
           {optional.length > 0 && (
             <section className="mb-8" aria-labelledby="optional">
               <h2 id="optional" className="mb-1 text-lg font-semibold">Other documents</h2>
               <p className="mb-3 text-sm text-muted-foreground">Certificates and diplomas help you get matched to more shifts.</p>
-              <div className="grid gap-3 md:grid-cols-2">{optional.map((d) => <DocCard key={d.document_type_id} d={d} />)}</div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">{optional.map((d) => <DocCard key={d.document_type_id} d={d} />)}</div>
             </section>
           )}
         </>

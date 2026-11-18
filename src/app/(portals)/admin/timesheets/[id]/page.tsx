@@ -43,7 +43,7 @@ export default async function TimesheetPage({ params }: { params: Promise<{ id: 
           {t.status === "client_approved" && ctx.can("timesheets.approve") && <ConfirmAction action={agencyApproveAction} fields={{ id }} title="Approve as agency?" description="The timesheet becomes final and can be invoiced and exported to payroll." confirmLabel="Approve" variant="default">Approve</ConfirmAction>}
         </div>} />
       {t.has_offline_events && <Alert tone="warning" className="mb-4">Contains offline or staff-entered attendance. These times were not verified in real time; check before approving.</Alert>}
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
           <Card>
             <CardHeader><CardTitle>Hours</CardTitle></CardHeader>
@@ -63,7 +63,7 @@ export default async function TimesheetPage({ params }: { params: Promise<{ id: 
               <CardHeader><CardTitle>Resolve dispute</CardTitle></CardHeader>
               <CardContent>
                 <ServerForm action={resolveDisputeAction.bind(null, id)} submitLabel="Correct and resubmit to client">
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <Field name="actual_start" label="Start"><Input name="actual_start" type="datetime-local" defaultValue={toLocalInput(t.actual_start)} /></Field>
                     <Field name="actual_end" label="End"><Input name="actual_end" type="datetime-local" defaultValue={toLocalInput(t.actual_end)} /></Field>
                     <Field name="break_minutes" label="Break (min)"><Input name="break_minutes" type="number" min={0} defaultValue={t.break_minutes} /></Field>

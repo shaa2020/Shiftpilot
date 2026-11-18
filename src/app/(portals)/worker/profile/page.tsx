@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireWorker } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/ui/feedback";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, humanize } from "@/components/ui/status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,41 @@ export default async function WorkerProfilePage({ searchParams }: { searchParams
 
   return (
     <>
-      <PageHeader title="My profile" description={`${w.worker_number} · ${w.engagement_type === "employee" ? "Agency employee" : "Freelancer"}`} />
+      {(() => {
+        const checks: [string, boolean][] = [
+          ["Phone number", !!w.phone], ["Date of birth", !!pd?.date_of_birth], ["Address", !!pd?.address_line1 && !!w.city],
+          ["Emergency contact", !!pd?.emergency_contact_name && !!pd?.emergency_contact_phone], ["About me", !!w.professional_summary], ["Travel distance", w.max_travel_km != null],
+        ];
+        const done = checks.filter(([, ok]) => ok).length;
+        const pct = Math.round((done / checks.length) * 100);
+        const name = ctx.user.fullName ?? `${w.first_name} ${w.last_name}`;
+        return (
+          <Card className="mb-5 overflow-hidden">
+            <div className="h-16 bg-gradient-to-r from-primary via-primary/70 to-primary/30" aria-hidden />
+            <CardContent className="space-y-4">
+              <div className="flex items-end gap-4">
+                <span className="-mt-8 grid size-16 shrink-0 place-items-center rounded-2xl border-4 border-surface bg-gradient-to-br from-navy to-primary text-xl font-bold text-white shadow-lg" aria-hidden>
+                  {name.split(/\s+/).slice(0, 2).map((x) => x[0]?.toUpperCase()).join("")}
+                </span>
+                <div className="min-w-0 flex-1 pb-1">
+                  <h1 className="truncate text-xl font-semibold tracking-tight">{name}</h1>
+                  <p className="text-sm text-muted-foreground">{w.worker_number} · {w.engagement_type === "employee" ? "Agency employee" : "Freelancer"}</p>
+                </div>
+                <span className="pb-1"><StatusBadge status={w.status} /></span>
+              </div>
+              <div>
+                <div className="mb-1.5 flex items-baseline justify-between text-sm"><span className="font-medium">Profile {pct}% complete</span><span className="text-xs text-muted-foreground">{done} of {checks.length}</span></div>
+                <div className="h-2 overflow-hidden rounded-full bg-surface-muted" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Profile complete">
+                  <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                </div>
+                {done < checks.length && (
+                  <p className="mt-2 text-xs text-muted-foreground">Still missing: {checks.filter(([, ok]) => !ok).map(([l]) => l).join(", ")} — add them under <Link href="?tab=details" className="text-primary hover:underline">Details</Link>.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
       <SectionTabs tabs={TABS.map((t) => ({ key: t, label: humanize(t), href: `?tab=${t}` }))} active={tab} />
       {tab === "onboarding" && <Onboarding workerId={ctx.workerId} />}
       {tab === "details" && (
@@ -40,7 +74,7 @@ export default async function WorkerProfilePage({ searchParams }: { searchParams
           </CardHeader>
           <CardContent>
             <ServerForm action={updateOwnDetailsAction} submitLabel="Save details">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field name="phone" label="Phone"><Input name="phone" type="tel" defaultValue={w.phone ?? ""} autoComplete="tel" /></Field>
                 <Field name="date_of_birth" label="Date of birth"><Input name="date_of_birth" type="date" defaultValue={pd?.date_of_birth ?? ""} /></Field>
                 <Field name="address_line1" label="Address" className="sm:col-span-2"><Input name="address_line1" defaultValue={pd?.address_line1 ?? ""} autoComplete="street-address" /></Field>
@@ -98,7 +132,7 @@ async function Skills({ workerId, agencyId }: { workerId: string; agencyId: stri
   ]);
   const remove = (table: string, id: string) => <ConfirmAction action={removeOwnItemAction} fields={{ table, id }} title="Remove?" variant="ghost" destructive confirmLabel="Remove">Remove</ConfirmAction>;
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader><CardTitle>Skills</CardTitle></CardHeader>
         <CardContent className="space-y-4">
@@ -136,7 +170,7 @@ async function Availability({ workerId }: { workerId: string }) {
   const supabase = await createClient();
   const { data } = await supabase.from("worker_availability").select("*").eq("worker_id", workerId).order("kind").order("day_of_week").order("date_from");
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <Card className="lg:col-span-2">
         <CardHeader><CardTitle>My availability</CardTitle><CardDescription>Shifts that match your availability are offered to you first.</CardDescription></CardHeader>
         <CardContent>

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Award, CalendarClock, ClipboardList, FileSignature, Languages, MessageSquare, StickyNote, Wrench } from "lucide-react";
+import { ArrowLeft, Award, CalendarClock, ClipboardList, FileSignature, Languages, Mail, MessageSquare, Phone, StickyNote, Wrench } from "lucide-react";
 import { requireStaff, type StaffContext } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatDateTime, formatMoney, localDate } from "@/lib/time";
-import { PageHeader, EmptyState } from "@/components/ui/feedback";
+import { EmptyState } from "@/components/ui/feedback";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { StatusBadge, humanize } from "@/components/ui/status-badge";
@@ -32,7 +32,8 @@ import { clearPreferenceAction } from "../feedback-actions";
 
 export const metadata: Metadata = { title: "Worker" };
 
-const TABS = ["profile", "compliance", "documents", "skills", "availability", "onboarding", "pathway", "feedback", "notes"] as const;
+const TABS = ["overview", "profile", "compliance", "documents", "skills", "availability", "onboarding", "pathway", "feedback", "notes"] as const;
+const TAB_LABEL: Record<string, string> = { overview: "Overview", profile: "Details", pathway: "Contract & pay" };
 type Tab = (typeof TABS)[number];
 const DAYS = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const VERIFY: [string, string][] = [["not_submitted", "Not submitted"], ["pending", "Pending"], ["verified", "Verified"], ["rejected", "Rejected"], ["expired", "Expired"]];
@@ -42,13 +43,13 @@ export default async function WorkerDetailPage({ params, searchParams }: { param
   const { id } = await params;
   const { tab: rawTab } = await searchParams;
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
-  const tab: Tab = (TABS as readonly string[]).includes(rawTab ?? "") ? (rawTab as Tab) : "profile";
+  const tab: Tab = (TABS as readonly string[]).includes(rawTab ?? "") ? (rawTab as Tab) : "overview";
   const supabase = await createClient();
   const { data: worker } = await supabase.from("workers").select("*").eq("id", id).maybeSingle();
   if (!worker) notFound();
   const { data: blockers } = await supabase.rpc("worker_activation_blockers", { p_worker_id: id });
 
-  const tabs = TABS.filter((t) => t !== "notes" || ctx.can("workers.notes.read")).map((t) => ({ key: t, label: humanize(t), href: `/admin/workers/${id}?tab=${t}` }));
+  const tabs = TABS.filter((t) => t !== "notes" || ctx.can("workers.notes.read")).map((t) => ({ key: t, label: TAB_LABEL[t] ?? humanize(t), href: `/admin/workers/${id}?tab=${t}` }));
   const canWrite = ctx.can("workers.write");
   const transitions: [string, string][] =
     worker.status === "active" ? [["suspended", "Suspend"], ["inactive", "Deactivate"]]
@@ -60,13 +61,9 @@ export default async function WorkerDetailPage({ params, searchParams }: { param
       <Link href="/admin/workers" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" aria-hidden /> Workers
       </Link>
-      <PageHeader
-        title={`${worker.first_name} ${worker.last_name}`}
-        description={`${worker.worker_number} · ${worker.engagement_type === "employee" ? "Agency employee" : "Independent freelancer"} · ${worker.email}`}
-        actions={
+      <WorkerHero worker={worker} stats={await workerStats(id)} actions={
           <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge status={worker.status} />
-            {worker.user_id && ctx.can("shifts.read") && (
+                        {worker.user_id && ctx.can("shifts.read") && (
               <Button asChild variant="secondary" size="sm"><Link href={`/admin/messages?to=worker:${id}`}><MessageSquare /> Message</Link></Button>
             )}
             {canWrite && transitions.map(([s, label]) => (
@@ -86,8 +83,7 @@ export default async function WorkerDetailPage({ params, searchParams }: { param
               <ConfirmAction action={setWorkerStatusAction} fields={{ id, status: "archived" }} title="Archive worker?" description="History is kept; the worker loses portal access." variant="ghost" destructive confirmLabel="Archive">Archive</ConfirmAction>
             )}
           </div>
-        }
-      />
+        } />
 
       {worker.status !== "active" && worker.status !== "archived" && blockers && blockers.length > 0 && (
         <Alert tone="warning" title="Before this worker can be activated" className="mb-4">
@@ -107,6 +103,7 @@ export default async function WorkerDetailPage({ params, searchParams }: { param
       )}
 
       <SectionTabs tabs={tabs} active={tab} />
+      {tab === "overview" && <Overview workerId={id} worker={worker} />}
       {tab === "profile" && (
         <Card>
           <CardHeader><CardTitle>Profile</CardTitle></CardHeader>
@@ -138,7 +135,7 @@ async function Compliance({ workerId, ctx }: { workerId: string; ctx: StaffConte
   if (!d) return null;
   const editable = ctx.can("workers.write");
   const fields = (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <Field name="identity_verification_status" label="Identity verification" hint="Record the outcome only after checking the original document.">
         <NativeSelect name="identity_verification_status" defaultValue={d.identity_verification_status}>{VERIFY.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</NativeSelect>
       </Field>
@@ -185,7 +182,7 @@ async function Skills({ workerId, ctx }: { workerId: string; ctx: StaffContext }
     canWrite && <ConfirmAction action={removeWorkerItemAction} fields={{ table, id }} title={`Remove ${label}?`} variant="ghost" destructive confirmLabel="Remove">Remove</ConfirmAction>;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <Card>
         <CardHeader><CardTitle>Skills</CardTitle></CardHeader>
         <CardContent className="space-y-4">
@@ -264,7 +261,7 @@ async function Skills({ workerId, ctx }: { workerId: string; ctx: StaffContext }
           )}
           {canWrite && allCerts.data && allCerts.data.length > 0 && (
             <div className="mx-5 border-t border-border pt-4">
-              <ServerForm action={addCertificateAction.bind(null, workerId)} submitLabel="Add certificate" resetOnSuccess className="grid gap-3 sm:grid-cols-4" footerClassName="sm:col-span-4">
+              <ServerForm action={addCertificateAction.bind(null, workerId)} submitLabel="Add certificate" resetOnSuccess className="grid grid-cols-1 gap-3 sm:grid-cols-4" footerClassName="sm:col-span-4">
                 <Field name="certificate_id" label="Certificate"><NativeSelect name="certificate_id" defaultValue="">{[<option key="" value="" disabled>Choose…</option>, ...allCerts.data.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)]}</NativeSelect></Field>
                 <Field name="certificate_number" label="Number"><Input name="certificate_number" /></Field>
                 <Field name="issued_on" label="Issued"><Input name="issued_on" type="date" /></Field>
@@ -282,7 +279,7 @@ async function Availability({ workerId, canWrite }: { workerId: string; canWrite
   const supabase = await createClient();
   const { data: rows } = await supabase.from("worker_availability").select("*").eq("worker_id", workerId).order("kind").order("day_of_week").order("date_from");
   return (
-    <div className="grid gap-6 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <Card className="xl:col-span-2">
         <CardHeader><CardTitle>Availability</CardTitle><CardDescription>Weekly pattern plus specific available or unavailable periods (holidays, exams).</CardDescription></CardHeader>
         <CardContent>
@@ -370,7 +367,7 @@ async function EmployeePathway({ workerId, ctx }: { workerId: string; ctx: Staff
   const canWrite = ctx.can("workers.write");
   const activeContracts = (contracts.data ?? []).filter((c) => c.status === "active");
   return (
-    <div className="grid gap-6 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
       <div className="space-y-6 xl:col-span-2">
         <Card>
           <CardHeader><CardTitle>Employment contracts</CardTitle><CardDescription>Contracts are signed through your approved e-signature process; record the signature here.</CardDescription></CardHeader>
@@ -468,7 +465,7 @@ async function FreelancerPathway({ workerId, ctx }: { workerId: string; ctx: Sta
   const canWrite = ctx.can("workers.write");
   const activeAgreements = (agreements.data ?? []).filter((a) => a.status === "active");
   const bizFields = (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <Field name="trade_name" label="Trade name" required><Input name="trade_name" defaultValue={biz?.trade_name ?? ""} /></Field>
       <Field name="legal_form" label="Legal form"><Input name="legal_form" defaultValue={biz?.legal_form ?? "eenmanszaak"} /></Field>
       <Field name="kvk_number" label="KvK number"><Input name="kvk_number" defaultValue={biz?.kvk_number ?? ""} /></Field>
@@ -524,7 +521,7 @@ async function FreelancerPathway({ workerId, ctx }: { workerId: string; ctx: Sta
       )}
 
       {biz && (
-        <div className="grid gap-6 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <Card className="xl:col-span-2">
             <CardHeader><CardTitle>Agreements & rates</CardTitle></CardHeader>
             <CardContent className="space-y-4">
@@ -632,7 +629,7 @@ async function WorkerDocuments({ workerId, ctx }: { workerId: string; ctx: Await
   const checklistIds = new Set((list ?? []).map((d) => d.document_id).filter(Boolean));
   const others = (extra ?? []).filter((d) => !checklistIds.has(d.id) && d.current_version > 0);
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_22rem]">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="space-y-5">
         <Card>
           <CardContent className="pt-5">
@@ -735,7 +732,7 @@ async function Feedback({ workerId, canClear }: { workerId: string; canClear: bo
   ]);
   const avg = ratings?.length ? ratings.reduce((n, r) => n + r.rating, 0) / ratings.length : null;
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle>Client ratings</CardTitle>
@@ -776,6 +773,147 @@ async function Feedback({ workerId, canClear }: { workerId: string; canClear: bo
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+async function workerStats(workerId: string) {
+  const supabase = await createClient();
+  const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+  const [done, noShow, hours, ratings, docs] = await Promise.all([
+    supabase.from("shift_assignments").select("id", { count: "exact", head: true }).eq("worker_id", workerId).in("status", ["completed", "checked_out"]),
+    supabase.from("shift_assignments").select("id", { count: "exact", head: true }).eq("worker_id", workerId).eq("status", "no_show"),
+    supabase.from("timesheets").select("worked_minutes").eq("worker_id", workerId).neq("status", "draft").gte("scheduled_start", since),
+    supabase.from("worker_ratings").select("rating").eq("worker_id", workerId),
+    supabase.rpc("worker_document_checklist", { p_worker_id: workerId }),
+  ]);
+  const required = (docs.data ?? []).filter((d) => d.required);
+  const r = ratings.data ?? [];
+  return {
+    shifts: done.count ?? 0,
+    noShows: noShow.count ?? 0,
+    hours30: (hours.data ?? []).reduce((n, t) => n + (t.worked_minutes ?? 0), 0),
+    rating: r.length ? r.reduce((n, x) => n + x.rating, 0) / r.length : null,
+    ratings: r.length,
+    docsDone: required.filter((d) => d.status === "verified" && d.current_version > 0).length,
+    docsRequired: required.length,
+  };
+}
+
+function WorkerHero({ worker, stats, actions }: {
+  worker: { first_name: string; last_name: string; worker_number: string | null; engagement_type: string; status: string; email: string | null; phone: string | null; city: string | null; user_id: string | null };
+  stats: Awaited<ReturnType<typeof workerStats>>;
+  actions: React.ReactNode;
+}) {
+  const name = `${worker.first_name} ${worker.last_name}`;
+  const ini = `${worker.first_name[0] ?? ""}${worker.last_name[0] ?? ""}`.toUpperCase();
+  const tiles: { label: string; value: string; hint?: string; tone?: string }[] = [
+    { label: "Shifts worked", value: String(stats.shifts) },
+    { label: "Hours (30 days)", value: `${Math.floor(stats.hours30 / 60)}:${String(stats.hours30 % 60).padStart(2, "0")}` },
+    { label: "Client rating", value: stats.rating != null ? `${stats.rating.toFixed(1)} ★` : "—", hint: stats.ratings ? `${stats.ratings} rating${stats.ratings === 1 ? "" : "s"}` : "No ratings yet" },
+    { label: "Required documents", value: `${stats.docsDone}/${stats.docsRequired}`, tone: stats.docsDone < stats.docsRequired ? "text-warning" : "text-success" },
+    { label: "No-shows", value: String(stats.noShows), tone: stats.noShows ? "text-danger" : undefined },
+  ];
+  return (
+    <Card className="mb-5 overflow-hidden">
+      <div className="h-20 bg-gradient-to-r from-primary via-primary/70 to-primary/30 sm:h-24" aria-hidden />
+      <CardContent className="space-y-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+          <span className="-mt-10 grid size-20 shrink-0 place-items-center rounded-2xl border-4 border-surface sm:-mt-12 bg-gradient-to-br from-navy to-primary text-2xl font-bold text-white shadow-lg sm:size-24" aria-hidden>{ini}</span>
+          <div className="min-w-0 flex-1 sm:pb-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight">{name}</h1>
+              <StatusBadge status={worker.status} />
+              <Badge tone={worker.engagement_type === "employee" ? "info" : "neutral"}>{worker.engagement_type === "employee" ? "Agency employee" : "Freelancer"}</Badge>
+              {!worker.user_id && <Badge tone="warning">No portal account</Badge>}
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">{[worker.worker_number, worker.city].filter(Boolean).join(" · ")}</p>
+          </div>
+          <div className="flex flex-wrap gap-2 sm:pb-1">
+            {worker.phone && <Button asChild size="sm" variant="secondary"><a href={`tel:${worker.phone}`}><Phone aria-hidden /> Call</a></Button>}
+            {worker.email && <Button asChild size="sm" variant="secondary"><a href={`mailto:${worker.email}`}><Mail aria-hidden /> Email</a></Button>}
+          </div>
+        </div>
+        <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          {tiles.map((t) => (
+            <div key={t.label} className="rounded-xl bg-surface-muted p-3">
+              <dt className="text-xs text-muted-foreground">{t.label}</dt>
+              <dd className={`text-lg font-semibold tabular-nums ${t.tone ?? ""}`}>{t.value}</dd>
+              {t.hint && <dd className="text-[11px] text-muted-foreground">{t.hint}</dd>}
+            </div>
+          ))}
+        </dl>
+        <div className="border-t border-border pt-3">{actions}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ShiftList({ rows, empty }: { rows: { id: string; status: string; starts_at: string; shift_id: string; shifts: { title: string; clients: { name: string } | null } | null }[]; empty: string }) {
+  return !rows.length ? <p className="text-sm text-muted-foreground">{empty}</p> : (
+      <ul className="divide-y divide-border">
+        {rows.map((a) => (
+          <li key={a.id}>
+            <Link href={`/admin/shifts/${a.shift_id}`} className="flex items-center gap-2 py-2.5 text-sm hover:text-primary">
+              <span className="w-28 shrink-0 text-muted-foreground">{formatDate(a.starts_at)}</span>
+              <span className="min-w-0 flex-1 truncate font-medium">{a.shifts?.title}<span className="font-normal text-muted-foreground"> · {a.shifts?.clients?.name}</span></span>
+              <StatusBadge status={a.status} />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    );
+}
+
+async function Overview({ workerId, worker }: { workerId: string; worker: { email: string | null; phone: string | null; city: string | null; postal_code: string | null; max_travel_km: number | null; professional_summary: string | null; created_at: string; activated_at: string | null } }) {
+  const supabase = await createClient();
+  const nowIso = new Date().toISOString();
+  const [upcoming, recent, skills, certs, langs] = await Promise.all([
+    supabase.from("shift_assignments").select("id, status, starts_at, ends_at, shift_id, shifts(title, clients(name))").eq("worker_id", workerId).in("status", ["invited", "accepted", "confirmed", "checked_in"]).gte("ends_at", nowIso).order("starts_at").limit(5),
+    supabase.from("shift_assignments").select("id, status, starts_at, shift_id, shifts(title, clients(name))").eq("worker_id", workerId).lt("starts_at", nowIso).order("starts_at", { ascending: false }).limit(5),
+    supabase.from("worker_skills").select("id, level, is_verified, skills(name)").eq("worker_id", workerId),
+    supabase.from("worker_certificates").select("id, status, expires_on, certificates(name)").eq("worker_id", workerId),
+    supabase.from("worker_languages").select("id, language_code, level").eq("worker_id", workerId),
+  ]);
+  return (
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div className="space-y-5">
+        <Card><CardHeader><CardTitle>Upcoming shifts</CardTitle></CardHeader><CardContent><ShiftList rows={upcoming.data ?? []} empty="No upcoming shifts." /></CardContent></Card>
+        <Card><CardHeader><CardTitle>Recent shifts</CardTitle></CardHeader><CardContent><ShiftList rows={recent.data ?? []} empty="No shifts worked yet." /></CardContent></Card>
+      </div>
+      <div className="space-y-5">
+        <Card>
+          <CardHeader><CardTitle>Contact</CardTitle></CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-[7rem_1fr] gap-y-2 text-sm">
+              <dt className="text-muted-foreground">Email</dt><dd className="truncate">{worker.email ? <a className="text-primary hover:underline" href={`mailto:${worker.email}`}>{worker.email}</a> : "—"}</dd>
+              <dt className="text-muted-foreground">Phone</dt><dd>{worker.phone ? <a className="text-primary hover:underline" href={`tel:${worker.phone}`}>{worker.phone}</a> : "—"}</dd>
+              <dt className="text-muted-foreground">Lives in</dt><dd>{[worker.postal_code, worker.city].filter(Boolean).join(" ") || "—"}</dd>
+              <dt className="text-muted-foreground">Travels up to</dt><dd>{worker.max_travel_km ? `${worker.max_travel_km} km` : "—"}</dd>
+              <dt className="text-muted-foreground">Registered</dt><dd>{formatDate(worker.created_at)}</dd>
+              <dt className="text-muted-foreground">Active since</dt><dd>{worker.activated_at ? formatDate(worker.activated_at) : "Not activated"}</dd>
+            </dl>
+            {worker.professional_summary && <p className="mt-4 rounded-lg bg-surface-muted p-3 text-sm">{worker.professional_summary}</p>}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between"><CardTitle>Skills & certificates</CardTitle><Link href="?tab=skills" className="text-sm text-primary">Manage</Link></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap gap-1.5">
+              {(skills.data ?? []).map((k) => <Badge key={k.id} tone={k.is_verified ? "success" : "neutral"}>{k.skills?.name}{k.level ? ` · ${k.level}` : ""}</Badge>)}
+              {(langs.data ?? []).map((l) => <Badge key={l.id}>{l.language_code.toUpperCase()}{l.level ? ` · ${l.level}` : ""}</Badge>)}
+              {!skills.data?.length && !langs.data?.length && <span className="text-sm text-muted-foreground">No skills added.</span>}
+            </div>
+            {!!certs.data?.length && (
+              <ul className="divide-y divide-border text-sm">
+                {certs.data.map((c) => (
+                  <li key={c.id} className="flex items-center gap-2 py-2"><Award className="size-4 text-muted-foreground" aria-hidden /><span className="flex-1">{c.certificates?.name}</span>{c.expires_on && <span className="text-xs text-muted-foreground">until {formatDate(c.expires_on)}</span>}<StatusBadge status={c.status} /></li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

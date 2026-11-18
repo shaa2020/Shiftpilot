@@ -190,6 +190,8 @@ test("workers: employment contract, wage, onboarding and activation", async ({ p
   const completes = page.getByRole("button", { name: "Complete" });
   for (let i = await completes.count(); i > 0; i--) {
     await confirmAction(page, page.getByRole("button", { name: "Complete" }).first());
+    // Wait for the refreshed list before opening the next dialog.
+    await expect(completes).toHaveCount(i - 1, { timeout: 15_000 });
   }
   await page.goto(workerUrl);
   await confirmAction(page, page.getByRole("button", { name: "Activate", exact: true }).first(), { expectToast: /./ });

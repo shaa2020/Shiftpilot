@@ -59,7 +59,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
           {c.original_invoice_id === id ? <>Credited: <Link className="underline" href={`/admin/invoices/${c.credit_invoice_id}`}>view credit note</Link> — {c.reason}</> : <>Credits <Link className="underline" href={`/admin/invoices/${c.original_invoice_id}`}>the original invoice</Link> — {c.reason}</>}
         </Alert>
       ))}
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
           <Card className="overflow-hidden">
             <Table>
@@ -85,7 +85,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
             <Card>
               <CardHeader><CardTitle>Add manual line</CardTitle></CardHeader>
               <CardContent>
-                <ServerForm action={addManualLineAction.bind(null, id)} submitLabel="Add line" resetOnSuccess className="grid gap-3 sm:grid-cols-5" footerClassName="sm:col-span-5">
+                <ServerForm action={addManualLineAction.bind(null, id)} submitLabel="Add line" resetOnSuccess className="grid grid-cols-1 gap-3 sm:grid-cols-5" footerClassName="sm:col-span-5">
                   <Field name="description" label="Description" className="sm:col-span-2"><Input name="description" /></Field>
                   <Field name="quantity" label="Qty"><Input name="quantity" type="number" step="0.01" defaultValue={1} /></Field>
                   <Field name="unit" label="Unit"><NativeSelect name="unit" defaultValue="item"><option value="item">Item</option><option value="hour">Hour</option><option value="day">Day</option><option value="fixed">Fixed</option></NativeSelect></Field>

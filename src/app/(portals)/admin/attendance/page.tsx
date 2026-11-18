@@ -55,7 +55,7 @@ export default async function AttendancePage() {
           </CardContent>
         </Card>
       )}
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Card className="overflow-hidden xl:col-span-2">
           <CardHeader><CardTitle>Today&apos;s assignments</CardTitle></CardHeader>
           {!todays?.length ? <EmptyState title="No assignments today" className="m-5" /> : (

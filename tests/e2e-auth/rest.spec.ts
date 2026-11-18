@@ -176,7 +176,7 @@ test("privacy: request lifecycle, JSON export, register, retention, breach, anon
 test("timesheets: client disputes, agency corrects, worker requests a correction, agency applies", async ({ page }) => {
   await signIn(page, USERS.client);
   await page.goto("/client/timesheets");
-  const row = page.getByRole("row").filter({ has: page.getByRole("button", { name: "Dispute" }) }).first();
+  const row = page.locator("li").filter({ has: page.getByRole("button", { name: "Dispute" }) }).first();
   await confirmAction(page, row.getByRole("button", { name: "Dispute" }), { reason: "The worker left an hour early." });
 
   await signIn(page, USERS.owner);

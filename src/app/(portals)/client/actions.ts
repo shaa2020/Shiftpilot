@@ -129,3 +129,21 @@ export async function updateTeamMemberAction(_p: ActionState, fd: FormData): Pro
   revalidatePath("/client/team");
   return { ok: true, message: "Access updated." };
 }
+
+/** Approves several submitted timesheets at once (each checked by the database). */
+export async function bulkApproveTimesheetsAction(_p: ActionState, fd: FormData): Promise<ActionState> {
+  const ctx = await requireClient();
+  if (!ctx.capabilities.approve) return { ok: false, message: "Your account cannot approve timesheets." };
+  const ids = fd.getAll("ids").map(String).filter((v) => uuid.safeParse(v).success).slice(0, 200);
+  if (!ids.length) return { ok: false, message: "Select at least one timesheet." };
+  const supabase = await createClient();
+  let ok = 0;
+  const failed: string[] = [];
+  for (const id of ids) {
+    const { error } = await supabase.rpc("client_review_timesheet", { p_timesheet_id: id, p_approve: true });
+    if (error) failed.push(dbErrorMessage(error)); else ok++;
+  }
+  revalidatePath("/client", "layout");
+  if (failed.length) return { ok: ok > 0, message: `${ok} approved; ${failed.length} could not be approved (${failed[0]}).` };
+  return { ok: true, message: `${ok} timesheet${ok === 1 ? "" : "s"} approved.` };
+}
