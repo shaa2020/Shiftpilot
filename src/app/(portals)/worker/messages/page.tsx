@@ -12,8 +12,9 @@ import { AutoRefresh } from "@/components/messages/auto-refresh";
 
 export const metadata: Metadata = { title: "Messages" };
 
-export default async function MessagesPage() {
+export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ subject?: string }> }) {
   const ctx = await requireWorker();
+  const { subject } = await searchParams;
   const items = await listConversations(ctx.agencyId);
   return (
     <>
@@ -32,10 +33,10 @@ export default async function MessagesPage() {
               <input type="hidden" name="agency_id" value={ctx.agencyId} />
 
               <Field name="subject" label="Subject">
-                <Input name="subject" maxLength={160} />
+                <Input name="subject" maxLength={160} defaultValue={subject?.slice(0, 160) ?? ""} />
               </Field>
               <Field name="body" label="Message" required>
-                <Textarea name="body" rows={4} maxLength={5000} />
+                <Textarea name="body" rows={4} maxLength={5000} autoFocus={!!subject} />
               </Field>
             </ServerForm>
           </CardContent>

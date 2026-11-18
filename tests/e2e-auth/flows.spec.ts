@@ -42,7 +42,7 @@ test("client sees only its own organisation and can review timesheets", async ({
 test("worker sees own shifts and pay, never another worker's", async ({ page }) => {
   await signIn(page, "medewerker@example.com");
   await expect(page).toHaveURL(/\/worker/);
-  await expect(page.getByRole("heading", { name: /Hi Mohamed/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /(Good (morning|afternoon|evening)|Hi),? Mohamed/ })).toBeVisible();
   await page.goto("/worker/schedule");
   await expect(page.getByText("Housekeeping").first()).toBeVisible();
   await expect(page.getByText("Sanne")).toHaveCount(0);

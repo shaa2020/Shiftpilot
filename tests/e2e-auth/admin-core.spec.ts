@@ -222,6 +222,6 @@ test("workers: invitation link → sign up → worker portal", async ({ page, br
   await accept.waitFor({ timeout: 20_000 });
   await accept.click();
   await p.waitForURL(/\/worker/, { timeout: 20_000 });
-  await expect(p.getByRole("heading", { name: new RegExp(`Hi ${firstName}`) })).toBeVisible();
+  await expect(p.getByRole("heading", { name: new RegExp(`(Good (morning|afternoon|evening)|Hi),? ${firstName}`) })).toBeVisible();
   await ctx.close();
 });

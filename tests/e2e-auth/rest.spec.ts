@@ -309,7 +309,7 @@ test("worker self-service: profile, skills, availability, interest, decline, rep
     const to = n(f, "date_to"); if (await to.isVisible()) await to.fill(amsterdamNow(32).date);
     await n(f, "note").fill("Holiday");
   });
-  await page.goto("/worker/offers");
+  await page.goto("/worker/offers?tab=open");
   const interested = page.getByRole("button", { name: "I'm interested" });
   if (ran(await interested.count(), "worker interested")) await confirmAction(page, interested.first());
   await page.goto("/worker/schedule");

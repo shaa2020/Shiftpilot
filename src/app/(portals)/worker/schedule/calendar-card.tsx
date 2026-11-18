@@ -21,7 +21,7 @@ export function CalendarCard({ active, lastUsed }: { active: boolean; lastUsed: 
       if (r.ok) { setUrl(null); toast.success(r.message ?? "Turned off"); } else toast.error(r.message ?? "Could not turn it off");
     });
   return (
-    <Card className="mb-4">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><CalendarPlus className="size-4" aria-hidden /> Add shifts to your calendar</CardTitle>
         <CardDescription>

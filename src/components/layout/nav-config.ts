@@ -110,11 +110,11 @@ export function clientNav(caps: ClientNavCaps): NavSection[] {
 export const WORKER_NAV: NavSection[] = [
   {
     items: [
-      { href: "/worker", label: "Home", icon: "home" },
-      { href: "/worker/offers", label: "Offers", icon: "bell" },
-      { href: "/worker/schedule", label: "My schedule", icon: "calendar", short: "Schedule" },
+      { href: "/worker", label: "Home", icon: "home", tab: true },
+      { href: "/worker/offers", label: "Offers", icon: "bell", tab: true },
+      { href: "/worker/schedule", label: "My schedule", icon: "calendar", short: "Schedule", tab: true },
+      { href: "/worker/messages", label: "Messages", icon: "chat", tab: true },
       { href: "/worker/timesheets", label: "Timesheets", icon: "clock", short: "Hours" },
-      { href: "/worker/messages", label: "Messages", icon: "chat" },
       { href: "/worker/earnings", label: "Earnings", icon: "receipt" },
       { href: "/worker/documents", label: "Documents", icon: "file" },
       { href: "/worker/profile", label: "My profile", icon: "users" },
