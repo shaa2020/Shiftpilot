@@ -3,8 +3,8 @@ import { expect, test } from "@playwright/test";
 test.describe("public pages", () => {
   test("landing page renders with sign-in entry point", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Run your staffing agency");
-    await page.getByRole("link", { name: "Sign in to ShiftPilot" }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("From client request to");
+    await page.getByRole("main").locator('a[href="/login"]').first().or(page.locator('section a[href="/login"]').first()).first().click();
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   });
