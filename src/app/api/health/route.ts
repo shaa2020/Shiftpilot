@@ -10,17 +10,26 @@ export const dynamic = "force-dynamic";
  */
 export async function GET() {
   const started = Date.now();
-  let database: "ok" | "unreachable" = "unreachable";
+  let database: "ok" | "unreachable" | "auth_rejected" = "unreachable";
+  let configError: string | null = null;
+  const keyKind = (v: string | undefined) => (!v ? "missing" : v.startsWith("eyJ") ? "jwt" : v.startsWith("sb_publishable_") ? "publishable" : v.startsWith("sb_secret_") ? "secret" : "unrecognised");
   try {
     const env = publicEnv();
     const res = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/health`, { headers: { apikey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY }, signal: AbortSignal.timeout(3000), cache: "no-store" });
-    database = res.ok ? "ok" : "unreachable";
-  } catch {
+    database = res.ok ? "ok" : res.status === 401 || res.status === 403 ? "auth_rejected" : "unreachable";
+  } catch (e) {
     database = "unreachable";
+    configError = e instanceof Error && e.message.startsWith("Invalid public environment") ? e.message.replace(/ See ENVIRONMENT\.md\.$/, "") : null;
   }
   const body = {
     status: database === "ok" ? "ok" : "degraded",
-    checks: { supabase: database },
+    checks: { supabase: database, ...(configError ? { config: configError } : {}) },
+    config: {
+      supabaseUrlSet: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+      anonKey: keyKind(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+      serviceRoleKey: keyKind(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      appUrlSource: process.env.NEXT_PUBLIC_APP_URL ? "NEXT_PUBLIC_APP_URL" : process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL ? "vercel" : "missing",
+    },
     integrations: {
       serviceRole: Boolean(serverEnv.supabaseServiceRoleKey()),
       email: Boolean(serverEnv.resendApiKey() && serverEnv.emailFrom()),

@@ -23,7 +23,13 @@ export function hashIdentifier(value: string): string {
  */
 export async function rateLimit(scope: string, identifier: string, limit: number, windowSeconds: number): Promise<boolean> {
   if (!isAdminClientConfigured()) return true;
-  const admin = createAdminClient();
+  let admin: ReturnType<typeof createAdminClient>;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    console.error("rate limit unavailable:", e instanceof Error ? e.message : e);
+    return true;
+  }
   const { data, error } = await admin.rpc("consume_rate_limit", {
     p_key: `${scope}:${hashIdentifier(identifier)}`,
     p_limit: limit,
