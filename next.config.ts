@@ -20,6 +20,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   cacheComponents: false,
+  // Version-skew protection: after a new deploy, open pages reload instead of calling outdated server actions.
+  deploymentId: process.env.VERCEL_DEPLOYMENT_ID || process.env.NEXT_DEPLOYMENT_ID || undefined,
   experimental: {
     // Enables forbidden() / unauthorized() for authorisation failures.
     authInterrupts: true,

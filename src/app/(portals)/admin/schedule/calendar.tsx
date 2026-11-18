@@ -22,7 +22,9 @@ export function ScheduleCalendar({ clients, locations, positions, workers, canEd
   const [filters, setFilters] = useState({ client: "", location: "", position: "", worker: "", unfilled: false });
 
   const source = useCallback(
-    async (info: EventSourceFuncInfo) => (await getScheduleEvents({ start: info.startStr, end: info.endStr, ...filters })) as EventInput[],
+    // Events load in the browser only (never during server rendering).
+    async (info: EventSourceFuncInfo) =>
+      typeof window === "undefined" ? [] : ((await getScheduleEvents({ start: info.startStr, end: info.endStr, ...filters })) as EventInput[]),
     [filters],
   );
   const eventSources = useMemo(() => [source], [source]);
