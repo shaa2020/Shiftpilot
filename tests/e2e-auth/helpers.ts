@@ -46,6 +46,8 @@ export async function submit(page: Page, submitLabel: string | RegExp, fill?: (f
     page.locator("[data-sonner-toast]").first().waitFor({ timeout: 20_000 }),
     page.waitForURL((u) => u.toString() !== before, { timeout: 20_000 }),
     form.locator('[role="alert"]').first().waitFor({ timeout: 20_000 }),
+    form.locator('[role="status"]').first().waitFor({ timeout: 20_000 }),
+    form.locator('[id$="-error"]').first().waitFor({ timeout: 20_000 }),
   ]).catch(() => undefined);
   const formAlert = form.locator('[role="alert"]');
   if (await formAlert.count()) {
@@ -66,13 +68,23 @@ export async function confirmAction(page: Page, trigger: Locator, opts: { reason
   const reasonBox = dialog.locator("#confirm-reason");
   if (opts.reason !== undefined) await reasonBox.fill(opts.reason);
   else if (await reasonBox.count()) await reasonBox.fill("Automated test entry");
+  const before = page.url();
+  const toasts = await page.locator("[data-sonner-toast]").count();
   await dialog.getByRole("button").last().click();
-  const toast = page.locator("[data-sonner-toast]").last();
-  await toast.waitFor({ timeout: 20_000 });
-  const text = await toast.innerText();
-  if (await toast.getAttribute("data-type") === "error") throw new Error(`Action failed: ${text}`);
-  if (opts.expectToast) expect(text).toMatch(opts.expectToast);
-  await expect(dialog).toBeHidden({ timeout: 10_000 });
+  // Success is a toast, or a redirect to another page.
+  const toast = page.locator("[data-sonner-toast]").nth(toasts);
+  const outcome = await Promise.race([
+    toast.waitFor({ timeout: 20_000 }).then(() => "toast"),
+    page.waitForURL((u) => u.toString() !== before, { timeout: 20_000 }).then(() => "navigated"),
+  ]).catch(() => "none");
+  if (outcome === "none") throw new Error("Action gave no feedback (no toast, no navigation)");
+  let text = "";
+  if (outcome === "toast") {
+    text = await toast.innerText();
+    if ((await toast.getAttribute("data-type")) === "error") throw new Error(`Action failed: ${text}`);
+    if (opts.expectToast) expect(text).toMatch(opts.expectToast);
+    await expect(dialog).toBeHidden({ timeout: 10_000 });
+  }
   await expectNoError(page);
   return text;
 }
