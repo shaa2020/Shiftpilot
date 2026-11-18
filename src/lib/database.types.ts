@@ -2348,6 +2348,102 @@ export type Database = {
             },
           ];
       };
+      document_requests: {
+        Row: {
+          id: string;
+          agency_id: string;
+          worker_id: string;
+          document_type_id: string;
+          document_id: string;
+          title: string;
+          message: string | null;
+          due_on: string | null;
+          status: string;
+          requested_by: string | null;
+          submitted_at: string | null;
+          completed_at: string | null;
+          cancelled_at: string | null;
+          cancel_reason: string | null;
+          last_reminded_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          worker_id: string;
+          document_type_id: string;
+          document_id: string;
+          title: string;
+          message?: string | null;
+          due_on?: string | null;
+          status?: string;
+          requested_by?: string | null;
+          submitted_at?: string | null;
+          completed_at?: string | null;
+          cancelled_at?: string | null;
+          cancel_reason?: string | null;
+          last_reminded_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          worker_id?: string;
+          document_type_id?: string;
+          document_id?: string;
+          title?: string;
+          message?: string | null;
+          due_on?: string | null;
+          status?: string;
+          requested_by?: string | null;
+          submitted_at?: string | null;
+          completed_at?: string | null;
+          cancelled_at?: string | null;
+          cancel_reason?: string | null;
+          last_reminded_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+            {
+              foreignKeyName: "document_requests_agency_id_document_id_fkey";
+              columns: ["agency_id", "document_id"];
+              isOneToOne: false;
+              referencedRelation: "documents";
+              referencedColumns: ["agency_id", "id"];
+            },
+            {
+              foreignKeyName: "document_requests_agency_id_document_type_id_fkey";
+              columns: ["agency_id", "document_type_id"];
+              isOneToOne: false;
+              referencedRelation: "document_types";
+              referencedColumns: ["agency_id", "id"];
+            },
+            {
+              foreignKeyName: "document_requests_agency_id_fkey";
+              columns: ["agency_id"];
+              isOneToOne: false;
+              referencedRelation: "agencies";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "document_requests_agency_id_worker_id_fkey";
+              columns: ["agency_id", "worker_id"];
+              isOneToOne: false;
+              referencedRelation: "workers";
+              referencedColumns: ["agency_id", "id"];
+            },
+            {
+              foreignKeyName: "document_requests_requested_by_fkey";
+              columns: ["requested_by"];
+              isOneToOne: false;
+              referencedRelation: "profiles";
+              referencedColumns: ["id"];
+            },
+          ];
+      };
       document_types: {
         Row: {
           id: string;
@@ -7985,6 +8081,7 @@ export type Database = {
       bootstrap_agency: { Args: { p_name: string; p_slug: string; p_owner_user_id: string }; Returns: string };
       calendar_feed_events: { Args: { p_token_hash: string }; Returns: { assignment_id: string; status: string; starts_at: string; ends_at: string; title: string; position_name: string; client_name: string; location_name: string; location_address: string; instructions: string; updated_at: string }[] };
       cancel_assignment: { Args: { p_assignment_id: string; p_reason: string }; Returns: undefined };
+      cancel_document_request: { Args: { p_request_id: string; p_reason?: string }; Returns: undefined };
       claim_automation_jobs: { Args: { p_worker: string; p_limit?: number }; Returns: Database["public"]["Tables"]["automation_jobs"]["Row"][] };
       claim_notification_deliveries: { Args: { p_limit?: number }; Returns: Database["public"]["Tables"]["notification_deliveries"]["Row"][] };
       client_agency_name: { Args: { p_client_id: string }; Returns: string };
@@ -8031,7 +8128,10 @@ export type Database = {
       record_invoice_sent: { Args: { p_invoice_id: string; p_sent_to: string }; Returns: undefined };
       register_push_subscription: { Args: { p_endpoint: string; p_p256dh: string; p_auth: string; p_user_agent?: string }; Returns: undefined };
       reject_shift_request: { Args: { p_request_id: string; p_reason: string }; Returns: undefined };
+      remind_document_request: { Args: { p_request_id: string }; Returns: undefined };
+      remind_overdue_document_requests: { Args: never; Returns: number };
       replace_assignment: { Args: { p_assignment_id: string; p_new_worker_id: string; p_override_reason?: string }; Returns: string };
+      request_documents: { Args: { p_agency_id: string; p_worker_ids: string[]; p_document_type_id: string; p_title: string; p_message?: string; p_due_on?: string }; Returns: number };
       request_invitation_clarification: { Args: { p_invitation_id: string; p_question: string }; Returns: undefined };
       request_replacement: { Args: { p_assignment_id: string; p_reason: string }; Returns: undefined };
       resolve_timesheet_dispute: { Args: { p_timesheet_id: string; p_actual_start: string; p_actual_end: string; p_break_minutes: number; p_note: string }; Returns: undefined };
@@ -8050,6 +8150,7 @@ export type Database = {
       worker_activation_blockers: { Args: { p_worker_id: string }; Returns: string[] };
       worker_available_shifts: { Args: { p_worker_id: string }; Returns: { shift_position_id: string; shift_id: string; title: string; position_name: string; client_name: string; location_name: string; city: string; starts_at: string; ends_at: string; break_minutes: number; open_slots: number }[] };
       worker_document_checklist: { Args: { p_worker_id: string }; Returns: { document_type_id: string; key: string; name: string; required: boolean; requires_expiry: boolean; is_sensitive: boolean; document_id: string; status: Database["public"]["Enums"]["verification_status"]; expires_on: string; current_version: number }[] };
+      worker_document_requests: { Args: { p_worker_id: string }; Returns: { id: string; document_id: string; document_type_id: string; type_name: string; title: string; message: string; due_on: string; status: string; created_at: string; submitted_at: string; completed_at: string; last_reminded_at: string; document_status: Database["public"]["Enums"]["verification_status"]; current_version: number; rejection_reason: string }[] };
     };
     Enums: {
       application_status: "new" | "screening" | "interview" | "assessment" | "offer" | "onboarding" | "hired" | "rejected" | "withdrawn";

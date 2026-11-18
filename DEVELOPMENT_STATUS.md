@@ -56,6 +56,15 @@ Invoice generation from approved timesheets (weekend/night/holiday classificatio
 - Workers subscribe to their shifts in Google/Apple/Outlook calendars via a private ICS link.
 - CSV exports of workers, shifts and timesheets.
 
+### Documents ✅ (migration 0029)
+- Documents hub: to review, requests (open / overdue / uploaded / completed / cancelled), expiring with one-click renewal requests, searchable library, document types.
+- Document page: image preview, open PDF, full version history with downloads, verify / reject with reason, edit dates, upload on behalf, archive.
+- Requests: ask one worker, several, or everyone missing a type; message and due date; reminders (manual and daily for overdue); worker uploads straight onto the request.
+- Worker documents: progress of required documents, requests first, rejection reasons, expiry warnings, view own file; agency-issued documents read-only.
+
+### Worker portal ✅
+- Organised shift page with phone action bar, single-shift calendar file, day-grouped schedule, richer offers, home overview, timesheet cards.
+
 ## Launch gates (not done — cannot be done from the build environment)
 
 | Gate | Why it matters |
@@ -82,9 +91,9 @@ Invoice generation from approved timesheets (weekend/night/holiday classificatio
 ## Tests (last local run, 2026-11-18)
 | Suite | Result |
 | --- | --- |
-| Unit (Vitest) | 77 / 77 passed (22 files) |
-| Database (incl. MFA enforcement and engagement) | 115 / 115 passed (10 files) |
-| Signed-in E2E against a local Supabase stack | 46 / 46 passed |
+| Unit (Vitest) | 83 / 83 passed (25 files) |
+| Database (incl. MFA enforcement, engagement, document requests) | 120 / 120 passed (11 files) |
+| Signed-in E2E against a local Supabase stack (desktop + phone) | 57 / 57 passed |
 | E2E smoke (desktop + mobile) | 126 / 128 against a live stack; the 2 others check the "database unreachable" fallback and only apply without a database |
 | Lint, typecheck, production build | passed |
 

@@ -9,12 +9,13 @@ import { createClient } from "@/lib/supabase/server";
 export default async function WorkerLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireWorker();
   const supabase = await createClient();
-  const [memberships, brand, unread, inv, asg] = await Promise.all([
+  const [memberships, brand, unread, inv, asg, docs] = await Promise.all([
     getMemberships(),
     getBranding(ctx.agencyId),
     unreadCount(ctx.agencyId),
     supabase.from("shift_invitations").select("id", { count: "exact", head: true }).eq("worker_id", ctx.workerId).eq("status", "pending"),
     supabase.from("shift_assignments").select("id", { count: "exact", head: true }).eq("worker_id", ctx.workerId).eq("status", "invited"),
+    supabase.from("document_requests").select("id", { count: "exact", head: true }).eq("worker_id", ctx.workerId).eq("status", "open"),
   ]);
   return (
     <AppShell
@@ -23,7 +24,7 @@ export default async function WorkerLayout({ children }: { children: React.React
       user={ctx.user}
       canSwitchPortal={availablePortals(memberships).length > 1}
       brand={{ color: brand.brandColor, logoUrl: brand.logoUrl, name: brand.agencyName }}
-      badges={{ "/worker/messages": unread, "/worker/offers": (inv.count ?? 0) + (asg.count ?? 0) }}
+      badges={{ "/worker/messages": unread, "/worker/offers": (inv.count ?? 0) + (asg.count ?? 0), "/worker/documents": docs.count ?? 0 }}
     >
       {children}
     </AppShell>

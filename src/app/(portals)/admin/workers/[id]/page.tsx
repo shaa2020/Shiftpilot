@@ -25,7 +25,9 @@ import {
   reviewClassificationAction, saveBusinessAction, setEmploymentContractStatusAction, setFreelancerAgreementStatusAction,
   setOnboardingTaskAction, setWorkerStatusAction, updatePrivateDetailsAction, updateWorkerProfileAction, verifyCertificateAction,
 } from "../actions";
-import { staffUploadDocumentAction } from "../../documents/actions";
+import { cancelRequestAction, remindRequestAction, requestDocumentsAction, staffUploadDocumentAction } from "../../documents/actions";
+import { documentState, dueLabel, REQUEST_STATUS } from "@/lib/documents/format";
+import { RequestDocumentForm } from "@/components/documents/request-form";
 import { clearPreferenceAction } from "../feedback-actions";
 
 export const metadata: Metadata = { title: "Worker" };
@@ -614,37 +616,114 @@ async function Notes({ workerId }: { workerId: string }) {
 
 async function WorkerDocuments({ workerId, ctx }: { workerId: string; ctx: Awaited<ReturnType<typeof requireStaff>> }) {
   const supabase = await createClient();
-  const { data: list } = await supabase.rpc("worker_document_checklist", { p_worker_id: workerId });
+  const today = localDate(new Date());
+  const [{ data: list }, { data: requests }, { data: types }, { data: extra }] = await Promise.all([
+    supabase.rpc("worker_document_checklist", { p_worker_id: workerId }),
+    supabase.rpc("worker_document_requests", { p_worker_id: workerId }),
+    supabase.from("document_types").select("id, name").eq("agency_id", ctx.agencyId).eq("status", "active").eq("applies_to", "worker").order("name"),
+    supabase.from("documents").select("id, title, status, expires_on, current_version, document_types(key, name)").eq("worker_id", workerId).is("archived_at", null).order("created_at", { ascending: false }),
+  ]);
   const canUpload = ctx.can("documents.upload");
   const upload = staffUploadDocumentAction.bind(null, { workerId });
+  const openReq = (requests ?? []).filter((r) => r.status === "open" || r.status === "submitted");
+  const required = (list ?? []).filter((d) => d.required);
+  const done = required.filter((d) => ["verified", "expiring"].includes(documentState(d, today).key)).length;
+  // Documents outside the checklist (e.g. "Other document" requests): show them too.
+  const checklistIds = new Set((list ?? []).map((d) => d.document_id).filter(Boolean));
+  const others = (extra ?? []).filter((d) => !checklistIds.has(d.id) && d.current_version > 0);
   return (
-    <Card className="overflow-hidden">
-      <CardHeader><CardTitle>Documents</CardTitle><CardDescription>Required documents for this worker&apos;s pathway. Verify uploads in the <Link className="text-primary hover:underline" href="/admin/documents">documents queue</Link>.</CardDescription></CardHeader>
-      {!list?.length ? <EmptyState icon={Award} title="No document types configured" className="m-5" /> : (
-        <Table>
-          <THead><tr><TH>Type</TH><TH>Status</TH><TH>Expires</TH><TH className="text-right">Upload</TH></tr></THead>
-          <TBody>
-            {list.map((d) => (
-              <TR key={d.document_type_id}>
-                <TD><p className="font-medium">{d.name}{d.required && <span className="ml-2 text-xs text-warning">required</span>}</p>{d.document_id && d.current_version > 0 && <a className="text-xs text-primary hover:underline" href={`/api/documents/${d.document_id}`} target="_blank" rel="noopener">Open v{d.current_version}</a>}</TD>
-                <TD>{d.document_id ? <StatusBadge status={d.status ?? "pending"} /> : <span className="text-muted-foreground">Missing</span>}</TD>
-                <TD className="text-muted-foreground">{d.expires_on ?? "—"}</TD>
-                <TD className="text-right">
-                  {canUpload && (
-                    <ServerForm action={upload} submitLabel={d.document_id ? "New version" : "Upload"} pendingLabel="Uploading…" resetOnSuccess className="flex flex-wrap items-end justify-end gap-2" footerClassName="m-0">
-                      <input type="hidden" name="document_type_id" value={d.document_type_id} />
-                      <input type="hidden" name="document_id" value={d.document_id ?? ""} />
-                      <input name="file" type="file" aria-label={`File for ${d.name}`} accept="application/pdf,image/jpeg,image/png,image/webp" className="max-w-52 text-xs" />
-                      {!d.document_id && d.requires_expiry && <Input name="expires_on" type="date" aria-label="Expires on" className="h-8 w-36" />}
-                    </ServerForm>
-                  )}
-                </TD>
-              </TR>
-            ))}
-          </TBody>
-        </Table>
+    <div className="grid gap-5 lg:grid-cols-[1fr_22rem]">
+      <div className="space-y-5">
+        <Card>
+          <CardContent className="pt-5">
+            <div className="mb-2 flex items-baseline justify-between text-sm"><span className="font-medium">Required documents</span><span className="text-muted-foreground">{done} of {required.length} verified</span></div>
+            <div className="h-2 overflow-hidden rounded-full bg-surface-muted" role="progressbar" aria-valuemin={0} aria-valuemax={required.length} aria-valuenow={done} aria-label="Required documents verified">
+              <div className="h-full rounded-full bg-success transition-all" style={{ width: `${required.length ? (done / required.length) * 100 : 100}%` }} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {openReq.length > 0 && (
+          <Card>
+            <CardHeader><CardTitle>Open requests</CardTitle></CardHeader>
+            <CardContent>
+              <ul className="divide-y divide-border">
+                {openReq.map((r) => {
+                  const due = r.status === "open" ? dueLabel(r.due_on, today) : null;
+                  return (
+                    <li key={r.id} className="flex flex-wrap items-center gap-2 py-2.5 text-sm">
+                      <Link href={`/admin/documents/${r.document_id}`} className="min-w-0 flex-1 font-medium hover:underline">{r.title}</Link>
+                      <Badge tone={REQUEST_STATUS[r.status]?.tone}>{REQUEST_STATUS[r.status]?.label}</Badge>
+                      {due && <Badge tone={due.overdue ? "danger" : "neutral"}>{due.label}</Badge>}
+                      {canUpload && r.status === "open" && <ConfirmAction action={remindRequestAction} fields={{ id: r.id }} title="Send a reminder?" confirmLabel="Send" variant="ghost">Remind</ConfirmAction>}
+                      {canUpload && <ConfirmAction action={cancelRequestAction} fields={{ id: r.id, worker_id: workerId }} title="Cancel this request?" withReason="Reason (optional)" reasonOptional confirmLabel="Cancel request" destructive variant="ghost">Cancel</ConfirmAction>}
+                    </li>
+                  );
+                })}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="overflow-hidden">
+          <CardHeader><CardTitle>Checklist</CardTitle><CardDescription>Every document type for this worker&apos;s pathway. Open a document to preview, verify or see its history.</CardDescription></CardHeader>
+          {!list?.length ? <EmptyState icon={Award} title="No document types configured" className="m-5" /> : (
+            <ul className="divide-y divide-border">
+              {list.map((d) => {
+                const st = documentState({ ...d, requested: openReq.some((r) => r.document_id === d.document_id) }, today);
+                return (
+                  <li key={d.document_type_id} className="flex flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center">
+                    <div className="min-w-0 flex-1">
+                      <p className="flex flex-wrap items-center gap-2 font-medium">
+                        {d.document_id && d.current_version > 0 ? <Link href={`/admin/documents/${d.document_id}`} className="hover:underline">{d.name}</Link> : d.name}
+                        {d.required && <Badge tone="warning">Required</Badge>}
+                        {d.is_sensitive && <Badge>Sensitive</Badge>}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{d.current_version > 0 ? `Version ${d.current_version}` : "No file"}{d.expires_on ? ` · valid until ${formatDate(d.expires_on)}` : ""}</p>
+                    </div>
+                    <Badge tone={st.tone}>{st.label}</Badge>
+                    {canUpload && (
+                      <ServerForm action={upload} submitLabel={d.current_version > 0 ? "New version" : "Upload"} pendingLabel="Uploading…" resetOnSuccess className="flex flex-wrap items-end gap-2 space-y-0" footerClassName="m-0">
+                        <input type="hidden" name="document_type_id" value={d.document_type_id} />
+                        <input type="hidden" name="document_id" value={d.document_id ?? ""} />
+                        <input name="file" type="file" aria-label={`File for ${d.name}`} accept="application/pdf,image/jpeg,image/png,image/webp" className="max-w-48 text-xs" />
+                        {!d.document_id && d.requires_expiry && <Input name="expires_on" type="date" aria-label="Expires on" className="h-8 w-36" />}
+                      </ServerForm>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+
+        {others.length > 0 && (
+          <Card>
+            <CardHeader><CardTitle>Other documents</CardTitle></CardHeader>
+            <CardContent>
+              <ul className="divide-y divide-border">
+                {others.map((d) => {
+                  const st = documentState(d, today);
+                  return (
+                    <li key={d.id} className="flex items-center gap-2 py-2.5 text-sm">
+                      <Link href={`/admin/documents/${d.id}`} className="min-w-0 flex-1 font-medium hover:underline">{d.title}</Link>
+                      <span className="text-xs text-muted-foreground">{d.document_types?.name}</span>
+                      <Badge tone={st.tone}>{st.label}</Badge>
+                    </li>
+                  );
+                })}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+      {canUpload && (
+        <Card className="lg:sticky lg:top-24 lg:self-start">
+          <CardHeader><CardTitle>Request a document</CardTitle><CardDescription>The worker is notified and sees it at the top of their documents.</CardDescription></CardHeader>
+          <CardContent><RequestDocumentForm action={requestDocumentsAction} types={types ?? []} workerId={workerId} minDate={today} /></CardContent>
+        </Card>
       )}
-    </Card>
+    </div>
   );
 }
 

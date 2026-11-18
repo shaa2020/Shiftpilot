@@ -46,6 +46,7 @@ the Data API). Every table has Row Level Security enabled — migration 0014 **f
 | 0023 automation_delivery | notification delivery queue, push registration, scheduled automations | — |
 | 0024 mfa_scan_hardening | staff MFA in the database, malware-scan status | — |
 | 0025–0027 | worker location access, client timesheet names, correction double-count fix | — |
+| 0029 document_requests | agency requests documents from workers (open → submitted → completed; reject re-opens), reminders, overdue job | document_requests |
 | 0028 engagement_branding | branding, messaging RPCs, client ratings and preferred/blocked workers (used by matching), announcements, calendar feeds | agency_branding, worker_ratings, client_worker_preferences, announcements, calendar_feeds |
 
 Mapping to the specification's table names: `users` is Supabase's `auth.users` (application data in `profiles`);

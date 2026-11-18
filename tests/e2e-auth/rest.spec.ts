@@ -40,10 +40,11 @@ async function toastText(page: Page) {
 test("documents: worker uploads, agency verifies one and rejects another, worker re-uploads", async ({ page }) => {
   await signIn(page, USERS.worker);
   await page.goto("/worker/documents");
-  const cards = page.locator("form").filter({ has: page.locator('[name="file"]') });
+  const cards = page.locator("form:visible").filter({ has: page.locator('[name="file"]') });
   expect(await cards.count()).toBeGreaterThan(1);
   for (const i of [0, 1]) {
-    const form = cards.nth(i);
+    void i;
+    const form = cards.first();
     await form.locator('[name="file"]').setInputFiles(pdf(`doc-${i}.pdf`));
     const exp = form.locator('[name="expires_on"]');
     if (await exp.count()) await exp.fill("2030-12-31");
@@ -52,7 +53,8 @@ test("documents: worker uploads, agency verifies one and rejects another, worker
     await page.reload();
   }
   // A renamed HTML file is refused by content check.
-  const form = page.locator("form").filter({ has: page.locator('[name="file"]') }).nth(2);
+  if (!(await page.locator("form:visible").filter({ has: page.locator('[name="file"]') }).count())) await page.getByText("Add this document").first().click();
+  const form = page.locator("form:visible").filter({ has: page.locator('[name="file"]') }).first();
   await form.locator('[name="file"]').setInputFiles({ name: "evil.pdf", mimeType: "application/pdf", buffer: Buffer.from("<html><script>alert(1)</script>") });
   await form.getByRole("button", { name: /^Upload/ }).click();
   await expect(form.getByText(/PDF, JPG, PNG or WebP/)).toBeVisible();

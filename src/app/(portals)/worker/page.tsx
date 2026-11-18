@@ -41,7 +41,7 @@ export default async function WorkerHome() {
   const now = nowMs();
   const supabase = await createClient();
   const nowIso = new Date(now).toISOString();
-  const [next, invitations, assigned, tasks, policy, hours, brand, unread] = await Promise.all([
+  const [next, invitations, assigned, tasks, policy, hours, brand, unread, docReq] = await Promise.all([
     supabase
       .from("shift_assignments")
       .select("id, status, starts_at, ends_at, shifts(title, break_minutes, dress_code, clients(name), client_locations(name, address_line1, postal_code, city, latitude, longitude)), shift_positions(job_positions(name)), break_records(id, ended_at)")
@@ -57,6 +57,7 @@ export default async function WorkerHome() {
     getWorkedMinutes(ctx.workerId),
     getBranding(ctx.agencyId),
     unreadCount(ctx.agencyId),
+    supabase.from("document_requests").select("id", { count: "exact", head: true }).eq("worker_id", ctx.workerId).eq("status", "open"),
   ]);
   const [nextShift, ...later] = next.data ?? [];
   const loc = nextShift?.shifts?.client_locations;
@@ -85,6 +86,14 @@ export default async function WorkerHome() {
           <Inbox className="size-5 shrink-0" aria-hidden />
           <span className="flex-1"><span className="font-semibold">{offers} new shift offer{offers === 1 ? "" : "s"}</span> waiting for your answer</span>
           <span className="font-medium underline">Respond</span>
+        </Link>
+      )}
+
+      {!!docReq.count && (
+        <Link href="/worker/documents" className="mb-4 flex items-center gap-3 rounded-xl border border-primary/30 bg-primary-soft/60 p-3 text-sm text-primary-soft-foreground">
+          <FileText className="size-5 shrink-0" aria-hidden />
+          <span className="flex-1"><span className="font-semibold">{docReq.count} document{docReq.count === 1 ? "" : "s"} requested</span> by your agency</span>
+          <span className="font-medium underline">Upload</span>
         </Link>
       )}
 
