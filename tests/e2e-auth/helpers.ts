@@ -10,13 +10,32 @@ export const USERS = {
   freelancer: "zzp@example.com",
 } as const;
 
-export async function signIn(page: Page, email: string) {
+const SESSION_DIR = process.env.E2E_SESSION_DIR ?? "test-results/.sessions";
+
+/**
+ * Signs in as `email`. Sessions are cached per user and reused, so the suite
+ * stays under the app's sign-in rate limit (10 attempts / 15 min per user).
+ * Pass { fresh: true } to force a real password sign-in.
+ */
+export async function signIn(page: Page, email: string, opts: { fresh?: boolean } = {}) {
+  const fs = await import("node:fs");
+  const file = `${SESSION_DIR}/${email.replace(/[^a-z0-9]/gi, "_")}.json`;
   await page.context().clearCookies();
+  if (!opts.fresh && fs.existsSync(file)) {
+    await page.context().addCookies(JSON.parse(fs.readFileSync(file, "utf8")));
+    await page.goto("/portal");
+    if (!new URL(page.url()).pathname.startsWith("/login")) return;
+    await page.context().clearCookies();
+  }
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: /sign in/i }).click();
   await page.waitForURL((u) => !u.pathname.startsWith("/login"));
+  if (!new URL(page.url()).pathname.startsWith("/mfa")) {
+    fs.mkdirSync(SESSION_DIR, { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(await page.context().cookies()));
+  }
 }
 
 /** The form whose submit button has this label. */

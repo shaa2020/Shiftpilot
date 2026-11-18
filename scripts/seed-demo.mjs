@@ -170,6 +170,9 @@ async function timesheet(s, w, assignment, status, lateMin = 0) {
   const start = new Date(new Date(s.starts_at).getTime() + lateMin * 60000).toISOString();
   const worked = Math.round((new Date(s.ends_at) - new Date(start)) / 60000) - 30;
   const ts = must(await admin.from("timesheets").insert({ agency_id: agency, assignment_id: assignment, shift_id: s.id, worker_id: w.id, client_id: s.client, location_id: s.loc, scheduled_start: s.starts_at, scheduled_end: s.ends_at, scheduled_break_minutes: 30, actual_start: start, actual_end: s.ends_at, break_minutes: 30, worked_minutes: worked, late_minutes: lateMin, overtime_minutes: 0, status: "draft" }).select("id").single(), "timesheet");
+  // Entry ledger as the real flow builds it at submission (regular + overtime minutes).
+  const scheduledWorked = Math.round((new Date(s.ends_at) - new Date(s.starts_at)) / 60000) - 30;
+  must(await admin.from("timesheet_entries").insert([{ agency_id: agency, timesheet_id: ts.id, entry_kind: "regular", minutes: Math.min(worked, scheduledWorked) }, ...(worked > scheduledWorked ? [{ agency_id: agency, timesheet_id: ts.id, entry_kind: "overtime", minutes: worked - scheduledWorked }] : [])]), "timesheet entries");
   const steps = { submitted: ["submitted"], client_approved: ["submitted", "client_approved"], agency_approved: ["submitted", "client_approved", "agency_approved"], disputed: ["submitted", "disputed"] }[status];
   for (const st of steps) {
     const patch = { status: st, ...(st === "submitted" ? { submitted_at: new Date().toISOString() } : {}), ...(st === "client_approved" ? { client_approved_at: new Date().toISOString() } : {}), ...(st === "agency_approved" ? { agency_approved_at: new Date().toISOString() } : {}) };

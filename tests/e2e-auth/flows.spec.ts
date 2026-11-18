@@ -2,17 +2,10 @@
  * Signed-in flows against a real Supabase stack seeded with scripts/seed-demo.mjs.
  * Run by the `e2e-supabase` CI job (Supabase CLI + Docker); not runnable without it.
  */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { signIn } from "./helpers";
 
-const PASSWORD = process.env.DEMO_PASSWORD ?? "ShiftPilot-demo-2026!";
 
-async function signIn(page: Page, email: string) {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(PASSWORD);
-  await page.getByRole("button", { name: /sign in/i }).click();
-  await page.waitForURL((u) => !u.pathname.startsWith("/login"));
-}
 
 test.describe.configure({ mode: "serial" });
 
@@ -71,7 +64,7 @@ test("account page offers two-factor setup and data requests", async ({ page }) 
 });
 
 test("signing out from the account menu ends the session", async ({ page }) => {
-  await signIn(page, "eigenaar@example.com");
+  await signIn(page, "financien@example.com");
   await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("menuitem", { name: "Sign out" }).click();
   await page.waitForURL(/\/login/);

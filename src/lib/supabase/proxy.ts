@@ -16,7 +16,8 @@ export async function updateSession(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const csp = buildCsp(nonce, { supabaseUrl, isDev: process.env.NODE_ENV === "development" });
+  const https = (request.headers.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(":", "")) === "https";
+  const csp = buildCsp(nonce, { supabaseUrl, isDev: process.env.NODE_ENV === "development", https });
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);

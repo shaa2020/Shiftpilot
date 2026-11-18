@@ -1,5 +1,5 @@
 /** Builds the Content-Security-Policy for a request nonce (unit tested). */
-export function buildCsp(nonce: string, opts: { supabaseUrl?: string; isDev: boolean }): string {
+export function buildCsp(nonce: string, opts: { supabaseUrl?: string; isDev: boolean; https?: boolean }): string {
   const supabase = opts.supabaseUrl ? new URL(opts.supabaseUrl).origin : "";
   const supabaseWs = supabase ? supabase.replace(/^http/, "ws") : "";
   const directives: Record<string, string[]> = {
@@ -18,6 +18,7 @@ export function buildCsp(nonce: string, opts: { supabaseUrl?: string; isDev: boo
     "frame-ancestors": ["'none'"],
   };
   const parts = Object.entries(directives).map(([k, v]) => `${k} ${v.join(" ")}`);
-  if (!opts.isDev) parts.push("upgrade-insecure-requests");
+  // Only on HTTPS sites: on plain-HTTP (local) it would block same-site form posts.
+  if (!opts.isDev && opts.https !== false) parts.push("upgrade-insecure-requests");
   return parts.join("; ");
 }

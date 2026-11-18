@@ -10,6 +10,7 @@ import { confirmAction, expectNoError, selectByText, selectFirst, signIn, submit
 test.describe.configure({ mode: "serial" });
 const n = (f: Locator, name: string) => f.locator(`[name="${name}"]`).first();
 const skill = unique("Forklift driving");
+const kitchenPosition = unique("Kitchen help");
 const cert = unique("VCA Basis");
 const clientName = unique("Test Client");
 const firstName = "Ilse";
@@ -25,7 +26,7 @@ test("configuration: industry, category, position, skill, certificate, qualifica
   await submit(page, "Add category", async (f) => { await n(f, "name").fill(unique("Kitchen")); });
   await page.goto("/admin/configuration?tab=positions");
   await submit(page, "Add position", async (f) => {
-    await n(f, "name").fill(unique("Kitchen help"));
+    await n(f, "name").fill(kitchenPosition);
     await n(f, "allows_freelancers").check();
   });
   await page.goto("/admin/configuration?tab=skills");
@@ -41,7 +42,8 @@ test("configuration: industry, category, position, skill, certificate, qualifica
 test("position requirements can be added", async ({ page }) => {
   await signIn(page, USERS.owner);
   await page.goto("/admin/configuration?tab=positions");
-  await page.getByRole("link", { name: /Schoonmaker/ }).first().click();
+  // Requirement goes on the test's own position, so demo positions stay matchable.
+  await page.getByRole("link", { name: kitchenPosition }).first().click();
   await page.waitForURL(/\/admin\/configuration\/positions\//);
   await submit(page, "Add requirement", async (f) => {
     const type = n(f, "requirement_type");

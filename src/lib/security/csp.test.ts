@@ -14,4 +14,10 @@ describe("buildCsp", () => {
   it("allows eval only in development", () => {
     expect(buildCsp("n", { isDev: true })).toContain("'unsafe-eval'");
   });
+
+  it("upgrades insecure requests only on HTTPS sites", () => {
+    expect(buildCsp("n", { isDev: false })).toContain("upgrade-insecure-requests");
+    expect(buildCsp("n", { isDev: false, https: true })).toContain("upgrade-insecure-requests");
+    expect(buildCsp("n", { isDev: false, https: false })).not.toContain("upgrade-insecure-requests");
+  });
 });
