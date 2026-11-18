@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRef } from "react";
 import { ArrowLeftRight, LogOut, UserRound } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -17,7 +18,12 @@ function initials(name: string | null, email: string) {
 }
 
 export function UserMenu({ user, canSwitchPortal }: { user: { email: string; fullName: string | null }; canSwitchPortal: boolean }) {
+  // The form lives outside the menu: menu items unmount when the menu closes,
+  // which would cancel a submit started from inside it.
+  const signOutForm = useRef<HTMLFormElement>(null);
   return (
+    <>
+    <form ref={signOutForm} action="/auth/signout" method="post" className="hidden" aria-hidden />
     <DropdownMenu>
       <DropdownMenuTrigger
         className="flex items-center gap-2 rounded-full p-0.5 pr-2 text-sm hover:bg-surface-muted"
@@ -51,14 +57,11 @@ export function UserMenu({ user, canSwitchPortal }: { user: { email: string; ful
           <ThemeToggle />
         </div>
         <DropdownMenuSeparator />
-        <form action="/auth/signout" method="post">
-          <DropdownMenuItem asChild>
-            <button type="submit" className="w-full">
-              <LogOut /> Sign out
-            </button>
-          </DropdownMenuItem>
-        </form>
+        <DropdownMenuItem onSelect={() => signOutForm.current?.requestSubmit()}>
+          <LogOut /> Sign out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   );
 }

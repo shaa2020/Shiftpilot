@@ -69,3 +69,12 @@ test("account page offers two-factor setup and data requests", async ({ page }) 
   await expect(page.getByRole("button", { name: "Set up two-factor authentication" })).toBeVisible();
   await expect(page.getByText("Your personal data")).toBeVisible();
 });
+
+test("signing out from the account menu ends the session", async ({ page }) => {
+  await signIn(page, "eigenaar@example.com");
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
+  await page.waitForURL(/\/login/);
+  await page.goto("/admin");
+  await expect(page).toHaveURL(/\/login/);
+});

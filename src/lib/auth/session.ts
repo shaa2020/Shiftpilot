@@ -101,23 +101,23 @@ export interface StaffContext {
  * agency comes from a cookie but is ALWAYS validated against the user's
  * memberships, so a forged cookie cannot grant access to another tenant.
  */
-export async function requireStaff(...required: Permission[]): Promise<StaffContext> {
-  const user = await requireUser("/admin");
-  const m = await getMemberships();
+/** Staff context, computed once per request (layout and page share it). */
+const loadStaffContext = cache(async (): Promise<StaffContext> => {
+  const [user, m, cookieStore] = await Promise.all([requireUser("/admin"), getMemberships(), cookies()]);
   if (m.staffAgencies.length === 0) forbidden();
-  const preferred = (await cookies()).get(ACTIVE_AGENCY_COOKIE)?.value;
+  const preferred = cookieStore.get(ACTIVE_AGENCY_COOKIE)?.value;
   const agency = m.staffAgencies.find((a) => a.agencyId === preferred) ?? m.staffAgencies[0];
 
   const supabase = await createClient();
   // MFA: platform-wide policy (env) or agency policy / enrolled factor (enforced by the database too).
   if (serverEnv.enforceStaffMfa() && (await getAssurance()).next !== "aal2") redirect("/account?mfa=required");
-  const { data: mfa } = await supabase.rpc("my_mfa_requirement", { p_agency_id: agency.agencyId });
+  const [{ data: mfa }, { data }] = await Promise.all([
+    supabase.rpc("my_mfa_requirement", { p_agency_id: agency.agencyId }),
+    supabase.rpc("my_permissions", { p_agency_id: agency.agencyId }),
+  ]);
   if (mfa === "enrol") redirect("/account?mfa=required");
   if (mfa === "verify") redirect("/mfa?next=/admin");
-  const { data } = await supabase.rpc("my_permissions", { p_agency_id: agency.agencyId });
   const permissions = new Set((data ?? []).filter(isPermission));
-  for (const p of required) if (!permissions.has(p)) forbidden();
-
   return {
     user,
     agencyId: agency.agencyId,
@@ -127,6 +127,12 @@ export async function requireStaff(...required: Permission[]): Promise<StaffCont
     agencies: m.staffAgencies,
     can: (p) => permissions.has(p),
   };
+});
+
+export async function requireStaff(...required: Permission[]): Promise<StaffContext> {
+  const ctx = await loadStaffContext();
+  for (const p of required) if (!ctx.permissions.has(p)) forbidden();
+  return ctx;
 }
 
 export interface ClientContext {
