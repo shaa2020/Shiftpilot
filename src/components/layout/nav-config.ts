@@ -10,6 +10,10 @@ export interface NavItem {
   icon: NavIcon;
   /** Visible when the user holds ANY of these (empty = always). */
   anyOf?: Permission[];
+  /** Shorter label for the phone tab bar. */
+  short?: string;
+  /** Shown in the phone tab bar (otherwise the first four items are used). */
+  tab?: boolean;
 }
 
 export interface NavSection {
@@ -22,14 +26,14 @@ export interface NavSection {
  * Modules are added as each roadmap phase ships (see DEVELOPMENT_STATUS.md).
  */
 export const ADMIN_NAV: NavSection[] = [
-  { items: [{ href: "/admin", label: "Dashboard", icon: "dashboard", anyOf: ["dashboard.view"] }, { href: "/admin/assistant", label: "Assistant", icon: "target", anyOf: ["dashboard.view"] }] },
+  { items: [{ href: "/admin", label: "Dashboard", icon: "dashboard", anyOf: ["dashboard.view"], short: "Home", tab: true }, { href: "/admin/assistant", label: "Assistant", icon: "target", anyOf: ["dashboard.view"] }] },
   {
     label: "Operations",
     items: [
       { href: "/admin/requests", label: "Staffing requests", icon: "bell", anyOf: ["requests.read"] },
-      { href: "/admin/shifts", label: "Shifts", icon: "briefcase", anyOf: ["shifts.read"] },
-      { href: "/admin/schedule", label: "Schedule", icon: "calendar", anyOf: ["shifts.read"] },
-      { href: "/admin/attendance", label: "Attendance", icon: "clock", anyOf: ["attendance.read"] },
+      { href: "/admin/shifts", label: "Shifts", icon: "briefcase", anyOf: ["shifts.read"], tab: true },
+      { href: "/admin/schedule", label: "Schedule", icon: "calendar", anyOf: ["shifts.read"], tab: true },
+      { href: "/admin/attendance", label: "Attendance", icon: "clock", anyOf: ["attendance.read"], short: "On site", tab: true },
       { href: "/admin/timesheets", label: "Timesheets", icon: "file", anyOf: ["timesheets.read"] },
     ],
   },
@@ -77,9 +81,9 @@ export const CLIENT_NAV: NavSection[] = [
   {
     items: [
       { href: "/client", label: "Overview", icon: "dashboard" },
-      { href: "/client/requests", label: "Staffing requests", icon: "bell" },
+      { href: "/client/requests", label: "Staffing requests", icon: "bell", short: "Requests" },
       { href: "/client/shifts", label: "Shifts", icon: "calendar" },
-      { href: "/client/timesheets", label: "Timesheets", icon: "clock" },
+      { href: "/client/timesheets", label: "Timesheets", icon: "clock", short: "Hours" },
       { href: "/client/invoices", label: "Invoices", icon: "receipt" },
       { href: "/client/pricing", label: "Pricing", icon: "file" },
       { href: "/client/team", label: "Team", icon: "users" },
@@ -103,8 +107,8 @@ export const WORKER_NAV: NavSection[] = [
     items: [
       { href: "/worker", label: "Home", icon: "home" },
       { href: "/worker/offers", label: "Offers", icon: "bell" },
-      { href: "/worker/schedule", label: "My schedule", icon: "calendar" },
-      { href: "/worker/timesheets", label: "Timesheets", icon: "clock" },
+      { href: "/worker/schedule", label: "My schedule", icon: "calendar", short: "Schedule" },
+      { href: "/worker/timesheets", label: "Timesheets", icon: "clock", short: "Hours" },
       { href: "/worker/earnings", label: "Earnings", icon: "receipt" },
       { href: "/worker/documents", label: "Documents", icon: "file" },
       { href: "/worker/profile", label: "My profile", icon: "users" },

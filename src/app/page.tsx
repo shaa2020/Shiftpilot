@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { BrandMark } from "@/components/layout/brand";
 import { Button } from "@/components/ui/button";
+import { InstallApp } from "@/components/layout/install-app";
 
 const FLOW = [
   { Icon: Building2, title: "Request", text: "The client asks for 6 waiters on Saturday from its portal." },
@@ -172,6 +173,7 @@ export default function Home() {
               <Button asChild size="lg" variant="secondary" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
                 <a href="#how">See how it works</a>
               </Button>
+              <InstallApp className="h-12 border-white/15 bg-white/5 px-6 text-base text-white hover:bg-white/10" label="Install the app" />
             </div>
             <ul className="mt-10 grid max-w-lg grid-cols-2 gap-x-6 gap-y-3 text-sm text-slate-300">
               {["Employees and freelancers", "Works offline on phones", "Invoices with night & weekend rules", "GDPR and audit built in"].map((t) => (

@@ -31,7 +31,7 @@ export default async function AdminDashboard() {
         </Alert>
       )}
 
-      <section aria-label="Operations" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Operations" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {m.shiftsToday !== null && <StatCard label="Shifts today" value={m.shiftsToday} icon={CalendarDays} tone="info" />}
         {m.unfilledShifts !== null && (
           <StatCard label="Unfilled upcoming shifts" value={m.unfilledShifts} icon={CalendarClock} tone={m.unfilledShifts > 0 ? "warning" : "success"} />
@@ -56,7 +56,7 @@ export default async function AdminDashboard() {
       </section>
 
       {(m.billedThisMonth !== null || m.outstanding !== null) && (
-        <section aria-label="Finance" className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <section aria-label="Finance" className="mt-3 grid grid-cols-2 gap-3 xl:grid-cols-4">
           {m.billedThisMonth !== null && <StatCard label="Invoiced this month" value={formatMoney(m.billedThisMonth)} icon={Euro} />}
           {m.outstanding !== null && (
             <StatCard

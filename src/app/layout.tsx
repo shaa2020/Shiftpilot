@@ -9,17 +9,23 @@ export const metadata: Metadata = {
   description: "Staffing agency operations: clients, workers, shifts, attendance, timesheets and invoicing in one platform.",
   applicationName: "ShiftPilot",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/icons/icon.svg", apple: "/icons/icon.svg" },
-  appleWebApp: { capable: true, title: "ShiftPilot", statusBarStyle: "default" },
+  icons: {
+    icon: [{ url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" }, { url: "/icons/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  appleWebApp: { capable: true, title: "ShiftPilot", statusBarStyle: "black-translucent" },
+  formatDetection: { telephone: false },
+  other: { "mobile-web-app-capable": "yes" },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#10243A" },
+    { media: "(prefers-color-scheme: light)", color: "#0a1a2e" },
     { media: "(prefers-color-scheme: dark)", color: "#08111E" },
   ],
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

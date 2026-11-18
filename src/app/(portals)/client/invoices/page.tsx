@@ -24,7 +24,7 @@ export default async function ClientInvoicesPage() {
   return (
     <>
       <PageHeader title="Invoices" description="Issued invoices, credit notes and payment status." />
-      <section className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <section className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard label="Open balance" value={formatMoney(openAmount)} icon={Receipt} />
         <StatCard label="Open invoices" value={open.length} />
         <StatCard label="Overdue" value={overdue.length} tone={overdue.length ? "danger" : "neutral"} />

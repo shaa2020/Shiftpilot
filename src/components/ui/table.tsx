@@ -3,19 +3,19 @@ import { cn } from "@/lib/utils";
 
 export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-x-auto">
+    <div className="w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
       <table className={cn("w-full caption-bottom text-sm", className)} {...props} />
     </div>
   );
 }
 export function THead(props: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className="border-b border-border bg-surface-muted" {...props} />;
+  return <thead className="border-b border-border/70 bg-surface-muted/50" {...props} />;
 }
 export function TBody(props: React.HTMLAttributes<HTMLTableSectionElement>) {
   return <tbody className="divide-y divide-border" {...props} />;
 }
 export function TR({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
-  return <tr className={cn("transition-colors hover:bg-surface-muted/60", className)} {...props} />;
+  return <tr className={cn("transition-colors hover:bg-primary-soft/30", className)} {...props} />;
 }
 export function TH({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) {
   return <th scope="col" className={cn("h-9 px-3 text-left align-middle text-xs font-medium uppercase tracking-wide text-muted-foreground", className)} {...props} />;

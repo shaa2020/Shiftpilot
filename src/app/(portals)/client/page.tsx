@@ -33,7 +33,7 @@ export default async function ClientOverview() {
   return (
     <>
       <PageHeader title={`Welcome, ${ctx.user.fullName?.split(" ")[0] ?? ""}`.trim()} description={`Staffing overview for ${ctx.clientName}.`} />
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard label="Upcoming shifts" value={upcoming.data?.length ?? 0} icon={CalendarDays} tone="info" />
         <StatCard label="Open staffing requests" value={openRequests.count ?? 0} icon={Inbox} />
         <StatCard label="Timesheets to approve" value={pendingTimesheets.count ?? 0} icon={ClipboardCheck} tone={(pendingTimesheets.count ?? 0) > 0 && ctx.capabilities.approve ? "warning" : "neutral"} />

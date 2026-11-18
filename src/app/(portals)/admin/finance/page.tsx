@@ -49,7 +49,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
         <label className="text-sm">To <Input type="date" name="to" defaultValue={to} /></label>
         <Button type="submit" variant="secondary">Apply</Button>
       </form>
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatCard label="Net invoiced revenue" value={n(s.net_revenue)} hint={`Invoiced ${n(s.revenue)} · credited ${n(s.credit_notes)}`} icon={Euro} tone="info" />
         <StatCard label="Direct staffing cost (estimate)" value={n(s.direct_cost_estimate)} hint={`Wages ${n(s.employee_wage_cost)} · employer est. ${n(s.employer_cost_estimate)} · freelancers ${n(s.freelancer_cost)}`} icon={Wallet} />
         <StatCard label="Estimated contribution margin" value={n(s.contribution_margin_estimate)} icon={TrendingUp} tone={s.contribution_margin_estimate >= 0 ? "success" : "danger"} hint="Not net profit" />

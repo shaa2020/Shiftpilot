@@ -35,7 +35,7 @@ export default async function AttendancePage() {
   return (
     <>
       <PageHeader title="Attendance today" description="Live check-in status for today's shifts." />
-      <section className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard label="On duty now" value={onDuty.length} icon={UserCheck} tone="success" />
         <StatCard label="Missing check-ins" value={missing.length} icon={AlertTriangle} tone={missing.length ? "danger" : "neutral"} />
         <StatCard label="Late arrivals" value={late.length} tone={late.length ? "warning" : "neutral"} />
