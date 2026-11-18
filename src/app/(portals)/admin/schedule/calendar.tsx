@@ -58,6 +58,7 @@ export function ScheduleCalendar({ clients, locations, positions, workers, canEd
           initialView="timeGridWeek"
           headerToolbar={{ left: "prev,next today", center: "title", right: "timeGridDay,timeGridWeek,dayGridMonth" }}
           firstDay={1}
+          locale="en-GB"
           timeZone="Europe/Amsterdam"
           height="auto"
           slotMinTime="00:00:00"

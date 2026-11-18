@@ -30,8 +30,8 @@ test("owner lands on Admin HQ and sees live operations", async ({ page }) => {
 
 test("planner cannot open finance-only pages", async ({ page }) => {
   await signIn(page, "planner@example.com");
-  const res = await page.goto("/admin/payroll");
-  expect(res?.status()).toBe(403);
+  await page.goto("/admin/payroll");
+  await expect(page.getByRole("heading", { name: "You don't have access to this page" })).toBeVisible();
 });
 
 test("client sees only its own organisation and can review timesheets", async ({ page }) => {
@@ -42,8 +42,8 @@ test("client sees only its own organisation and can review timesheets", async ({
   await expect(page.getByText("Logistiek Centrum Nieuwegein")).toHaveCount(0);
   await page.goto("/client/timesheets");
   await expect(page.getByRole("heading", { name: "Timesheets" })).toBeVisible();
-  const res = await page.goto("/admin");
-  expect(res?.status()).toBe(403);
+  await page.goto("/admin");
+  await expect(page.getByRole("heading", { name: "You don't have access to this page" })).toBeVisible();
 });
 
 test("worker sees own shifts and pay, never another worker's", async ({ page }) => {

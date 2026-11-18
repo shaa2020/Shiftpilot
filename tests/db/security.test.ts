@@ -469,3 +469,25 @@ describe("database-level MFA", () => {
     }
   });
 });
+
+describe("worker access to shift locations", () => {
+  it("a worker sees the location and client of their own shift only", async () => {
+    const s = (await db.query(
+      `insert into public.shifts (agency_id, client_id, location_id, title, starts_at, ends_at, break_minutes, status)
+       values ($1, $2, $3, 'Loc test', '2032-05-03T08:00:00Z', '2032-05-03T16:00:00Z', 30, 'open') returning id`,
+      [f.agencyA, f.clients.c1, f.locations.c1Main],
+    )).rows[0].id;
+    const pos = (await db.query("insert into public.shift_positions (agency_id, shift_id, position_id, headcount) values ($1, $2, $3, 2) returning id", [f.agencyA, s, f.positions.cleanerA])).rows[0].id;
+    const see = (user: string) => asUser(db, user, async (tx) => ({
+      locs: (await tx.query("select id from public.client_locations where client_id = $1 order by name", [f.clients.c1])).rows.map((r) => r.id),
+      clients: (await tx.query("select name from public.clients")).rows.map((r) => r.name),
+    }));
+    expect(await see(f.users.workerEmp2)).toEqual({ locs: [], clients: [] });
+    await db.query("insert into public.shift_assignments (agency_id, shift_id, shift_position_id, worker_id, status, starts_at, ends_at) values ($1, $2, $3, $4, 'confirmed', now(), now())", [f.agencyA, s, pos, f.workers.emp2]);
+    expect(await see(f.users.workerEmp2)).toEqual({ locs: [f.locations.c1Main], clients: ["Client One"] });
+    // Another worker still sees nothing.
+    expect(await see(f.users.workerFree1)).toEqual({ locs: [], clients: [] });
+    await db.query("update public.shift_assignments set status = 'cancelled', cancelled_at = now(), cancellation_reason = 'test' where shift_id = $1", [s]);
+    expect(await see(f.users.workerEmp2)).toEqual({ locs: [], clients: [] });
+  });
+});

@@ -143,6 +143,8 @@ async function worker(first, last, email, type, userId, city, lat, lon) {
     must(await admin.from("freelancer_agreements").insert({ agency_id: agency, business_id: b.id, agreement_number: `ZA-${ref}`, status: "active", start_date: localDate(-120), service_description: "Bediening en schoonmaak op afroep", signed_at: new Date().toISOString() }), "agreement");
   }
   must(await admin.from("workers").update({ status: "active" }).eq("id", w.id), "activate worker");
+  // Onboarding done, except the document upload (left open so the worker app shows a real to-do).
+  must(await admin.from("onboarding_tasks").update({ status: "completed", completed_at: new Date().toISOString(), completed_by: ids.owner }).eq("worker_id", w.id).neq("task_type", "documents"), "complete onboarding");
   return { id: w.id, type };
 }
 const W = {
