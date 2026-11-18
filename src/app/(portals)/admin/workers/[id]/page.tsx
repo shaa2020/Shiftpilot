@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Award, CalendarClock, ClipboardList, FileSignature, Languages, StickyNote, Wrench } from "lucide-react";
 import { requireStaff, type StaffContext } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { formatDateTime, formatMoney } from "@/lib/time";
+import { formatDateTime, formatMoney, localDate } from "@/lib/time";
 import { PageHeader, EmptyState } from "@/components/ui/feedback";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
@@ -172,7 +172,7 @@ async function Skills({ workerId, ctx }: { workerId: string; ctx: StaffContext }
     supabase.from("certificates").select("id, name").eq("agency_id", ctx.agencyId).eq("status", "active").order("name"),
   ]);
   const canWrite = ctx.can("workers.write");
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDate(new Date());
   const remove = (table: string, id: string, label: string) =>
     canWrite && <ConfirmAction action={removeWorkerItemAction} fields={{ table, id }} title={`Remove ${label}?`} variant="ghost" destructive confirmLabel="Remove">Remove</ConfirmAction>;
 

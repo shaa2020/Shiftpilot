@@ -1,0 +1,94 @@
+import { expect, type Locator, type Page } from "@playwright/test";
+
+export const PASSWORD = process.env.DEMO_PASSWORD ?? "ShiftPilot-demo-2026!";
+export const USERS = {
+  owner: "eigenaar@example.com",
+  planner: "planner@example.com",
+  finance: "financien@example.com",
+  client: "klant@example.com",
+  worker: "medewerker@example.com",
+  freelancer: "zzp@example.com",
+} as const;
+
+export async function signIn(page: Page, email: string) {
+  await page.context().clearCookies();
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(PASSWORD);
+  await page.getByRole("button", { name: /sign in/i }).click();
+  await page.waitForURL((u) => !u.pathname.startsWith("/login"));
+}
+
+/** The form whose submit button has this label. */
+export function formWith(page: Page | Locator, submit: string | RegExp): Locator {
+  return page.locator("form").filter({ has: page.getByRole("button", { name: submit, exact: typeof submit === "string" }) }).first();
+}
+
+/** Fails if the page shows the error boundary or a form error alert. */
+export async function expectNoError(page: Page) {
+  await expect(page.getByText("Something went wrong")).toHaveCount(0);
+  const alerts = page.locator('[role="alert"]').filter({ hasNotText: /^$/ });
+  const n = await alerts.count();
+  for (let i = 0; i < n; i++) {
+    const t = (await alerts.nth(i).innerText()).trim();
+    if (t && /could not|failed|not allowed|not authori|invalid|error|denied|violat|missing|required/i.test(t)) throw new Error(`Error shown on page: ${t}`);
+  }
+}
+
+/** Submit a ServerForm and wait for its success toast (or a navigation). */
+export async function submit(page: Page, submitLabel: string | RegExp, fill?: (form: Locator) => Promise<void>, expectText?: string | RegExp) {
+  const form = formWith(page, submitLabel);
+  await expect(form).toBeVisible();
+  if (fill) await fill(form);
+  const before = page.url();
+  await form.getByRole("button", { name: submitLabel, exact: typeof submitLabel === "string" }).click();
+  await Promise.race([
+    page.locator("[data-sonner-toast]").first().waitFor({ timeout: 20_000 }),
+    page.waitForURL((u) => u.toString() !== before, { timeout: 20_000 }),
+    form.locator('[role="alert"]').first().waitFor({ timeout: 20_000 }),
+  ]).catch(() => undefined);
+  const formAlert = form.locator('[role="alert"]');
+  if (await formAlert.count()) {
+    const t = (await formAlert.first().innerText()).trim();
+    if (t && !/saved|added|created|sent|recorded|success/i.test(t)) throw new Error(`Form "${submitLabel}" failed: ${t}`);
+  }
+  const fieldErrors = form.locator('[id$="-error"]');
+  if (await fieldErrors.count()) throw new Error(`Form "${submitLabel}" field errors: ${(await fieldErrors.allInnerTexts()).join(" | ")}`);
+  if (expectText) await expect(page.getByText(expectText).first()).toBeVisible({ timeout: 15_000 });
+  await expectNoError(page);
+}
+
+/** Click a ConfirmAction trigger, optionally type a reason, and confirm. */
+export async function confirmAction(page: Page, trigger: Locator, opts: { reason?: string; expectToast?: string | RegExp } = {}) {
+  await trigger.click();
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog).toBeVisible();
+  if (opts.reason !== undefined) await dialog.locator("#confirm-reason").fill(opts.reason);
+  await dialog.getByRole("button").last().click();
+  const toast = page.locator("[data-sonner-toast]").last();
+  await toast.waitFor({ timeout: 20_000 });
+  const text = await toast.innerText();
+  if (await toast.getAttribute("data-type") === "error") throw new Error(`Action failed: ${text}`);
+  if (opts.expectToast) expect(text).toMatch(opts.expectToast);
+  await expect(dialog).toBeHidden({ timeout: 10_000 });
+  await expectNoError(page);
+  return text;
+}
+
+/** Select the first option of a native select whose text matches. */
+export async function selectByText(select: Locator, text: string | RegExp) {
+  const options = await select.locator("option").allInnerTexts();
+  const match = options.find((o) => (typeof text === "string" ? o.includes(text) : text.test(o)));
+  if (!match) throw new Error(`No option matching ${text} in [${options.join(", ")}]`);
+  await select.selectOption({ label: match });
+}
+
+/** Europe/Amsterdam local date (YYYY-MM-DD) and hour. */
+export function amsterdamNow(offsetDays = 0) {
+  const d = new Date(Date.now() + offsetDays * 86_400_000);
+  const date = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Amsterdam" }).format(d);
+  const hour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Amsterdam", hour: "2-digit", hour12: false }).format(d));
+  return { date, hour };
+}
+export const hhmm = (h: number) => `${String(((h % 24) + 24) % 24).padStart(2, "0")}:00`;
+export const unique = (prefix: string) => `${prefix} ${Date.now().toString(36).slice(-5)}`;

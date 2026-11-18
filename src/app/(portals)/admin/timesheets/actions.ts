@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { zonedDateTime, localInputToIso } from "@/lib/time";
 import { requireStaff } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { dbErrorMessage, formObject, zodErrors, type ActionState } from "@/lib/actions/state";
@@ -35,8 +36,9 @@ export async function bulkAgencyApproveAction(_p: ActionState, fd: FormData): Pr
 }
 
 const resolveSchema = z.object({
-  actual_start: z.string().min(1, "Enter the start").transform((v) => new Date(v).toISOString()),
-  actual_end: z.string().min(1, "Enter the end").transform((v) => new Date(v).toISOString()),
+  // datetime-local values are agency local time (Europe/Amsterdam), not server time.
+  actual_start: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/, "Enter the start").transform((v) => zonedDateTime(v.slice(0, 10), v.slice(11, 16)).toISOString()),
+  actual_end: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/, "Enter the end").transform((v) => zonedDateTime(v.slice(0, 10), v.slice(11, 16)).toISOString()),
   break_minutes: z.coerce.number().int().min(0).max(600),
   note: z.string().trim().min(5, "Describe the correction").max(2000),
 });
@@ -66,7 +68,7 @@ export async function decideCorrectionAction(_p: ActionState, fd: FormData): Pro
 const staffEntrySchema = z.object({
   assignment_id: uuid,
   event_type: z.enum(["check_in", "check_out", "break_start", "break_end"]),
-  occurred_at: z.string().min(1, "Enter the time").transform((v) => new Date(v).toISOString()),
+  occurred_at: z.string().min(1, "Enter the time").transform((v) => localInputToIso(v)),
   note: z.string().trim().min(3, "Explain why staff records this").max(1000),
 });
 

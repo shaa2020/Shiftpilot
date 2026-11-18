@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { requireStaff } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { formatDateTime, formatTime, formatDate } from "@/lib/time";
+import { formatDateTime, formatTime, formatDate, isoToLocalInput } from "@/lib/time";
 import { hoursLabel } from "@/lib/data/worker";
 import { PageHeader } from "@/components/ui/feedback";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,11 +20,7 @@ import { agencyApproveAction, decideCorrectionAction, resolveDisputeAction } fro
 
 export const metadata: Metadata = { title: "Timesheet" };
 
-function toLocalInput(iso: string | null) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-}
+const toLocalInput = (iso: string | null) => isoToLocalInput(iso);
 
 export default async function TimesheetPage({ params }: { params: Promise<{ id: string }> }) {
   const ctx = await requireStaff("timesheets.read");

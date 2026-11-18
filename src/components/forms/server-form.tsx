@@ -37,14 +37,17 @@ export function ServerForm({
   footerClassName?: string;
   hideSubmit?: boolean;
 }) {
-  const [state, formAction] = useActionState(action, {});
+  // The success toast is raised as soon as the action returns, so it still shows
+  // when the refreshed page no longer renders this form (e.g. a list that empties).
+  const [state, formAction] = useActionState(async (prev: ActionState, fd: FormData) => {
+    const result = await action(prev, fd);
+    if (result.ok && toastOnSuccess && result.message) toast.success(result.message);
+    return result;
+  }, {});
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    if (state.ok) {
-      if (toastOnSuccess && state.message) toast.success(state.message);
-      if (resetOnSuccess) ref.current?.reset();
-    }
-  }, [state, toastOnSuccess, resetOnSuccess]);
+    if (state.ok && resetOnSuccess) ref.current?.reset();
+  }, [state, resetOnSuccess]);
 
   return (
     <ErrorsContext.Provider value={state.errors ?? {}}>

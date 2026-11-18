@@ -2,6 +2,7 @@
 import { geocode } from "@/lib/geo/geocode";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { localInputToIso } from "@/lib/time";
 import { requireWorker } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { optionalText } from "@/lib/validation/agency";
@@ -84,8 +85,8 @@ export async function reportAbsenceAction(_p: ActionState, fd: FormData): Promis
 
 const correctionSchema = z.object({
   timesheet_id: uuid,
-  proposed_start: z.string().or(z.literal("")).transform((v) => (v === "" ? null : new Date(v).toISOString())).optional(),
-  proposed_end: z.string().or(z.literal("")).transform((v) => (v === "" ? null : new Date(v).toISOString())).optional(),
+  proposed_start: z.string().or(z.literal("")).transform((v) => (v === "" ? null : localInputToIso(v))).optional(),
+  proposed_end: z.string().or(z.literal("")).transform((v) => (v === "" ? null : localInputToIso(v))).optional(),
   proposed_break_minutes: z.union([z.literal(""), z.coerce.number().int().min(0).max(240)]).transform((v) => (v === "" ? null : v)).optional(),
   reason: z.string().trim().min(5, "Explain what should be corrected").max(2000),
 });

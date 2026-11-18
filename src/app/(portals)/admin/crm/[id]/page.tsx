@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, History } from "lucide-react";
 import { requireStaff } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { formatDateTime } from "@/lib/time";
+import { formatDateTime, isoToLocalInput } from "@/lib/time";
 import { PageHeader, EmptyState } from "@/components/ui/feedback";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, humanize } from "@/components/ui/status-badge";
@@ -19,11 +19,7 @@ import { addActivityAction, completeActivityAction, convertLeadAction, setLeadOw
 export const metadata: Metadata = { title: "Lead" };
 const STAGES = ["new", "contacted", "qualified", "proposal", "negotiation", "won", "lost"];
 
-function toLocal(iso: string | null) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-}
+const toLocal = (iso: string | null) => isoToLocalInput(iso);
 
 export default async function LeadPage({ params }: { params: Promise<{ id: string }> }) {
   const ctx = await requireStaff("crm.read");

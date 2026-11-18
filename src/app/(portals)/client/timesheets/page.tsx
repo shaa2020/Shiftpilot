@@ -21,13 +21,14 @@ export default async function ClientTimesheetsPage({ searchParams }: { searchPar
   const supabase = await createClient();
   let q = supabase
     .from("timesheets")
-    .select("id, status, scheduled_start, scheduled_end, scheduled_break_minutes, actual_start, actual_end, break_minutes, worked_minutes, overtime_minutes, late_minutes, has_offline_events, shifts(title), client_locations(name), shift_assignments(workers(display_name, first_name, last_name))")
+    .select("id, status, scheduled_start, scheduled_end, scheduled_break_minutes, actual_start, actual_end, break_minutes, worked_minutes, overtime_minutes, late_minutes, has_offline_events, shifts(title), client_locations(name)")
     .eq("client_id", ctx.clientId)
     .order("scheduled_start", { ascending: false })
     .limit(300);
   q = view === "pending" ? q.eq("status", "submitted") : q.neq("status", "submitted");
   const { data } = await q;
-  const name = (w?: { display_name: string | null; first_name: string; last_name: string } | null) => w ? (w.display_name ?? `${w.first_name} ${w.last_name.slice(0, 1)}.`) : "";
+  const { data: names } = data?.length ? await supabase.rpc("client_timesheet_workers", { p_timesheet_ids: data.map((t) => t.id) }) : { data: [] };
+  const workerName = new Map((names ?? []).map((n) => [n.timesheet_id, n.worker_display_name]));
   return (
     <>
       <PageHeader title="Timesheets" description="Check the recorded hours. Approved hours are invoiced; disputes go to the agency." />
@@ -40,7 +41,7 @@ export default async function ClientTimesheetsPage({ searchParams }: { searchPar
               {data.map((t) => (
                 <TR key={t.id}>
                   <TD className="whitespace-nowrap">{formatDate(t.scheduled_start)}</TD>
-                  <TD>{name(t.shift_assignments?.workers)}<p className="text-xs text-muted-foreground">{t.shifts?.title} · {t.client_locations?.name}</p></TD>
+                  <TD><span className="font-medium">{workerName.get(t.id) ?? "—"}</span><p className="text-xs text-muted-foreground">{t.shifts?.title} · {t.client_locations?.name}</p></TD>
                   <TD className="whitespace-nowrap text-muted-foreground">{formatTime(t.scheduled_start)}–{formatTime(t.scheduled_end)} ({t.scheduled_break_minutes}m)</TD>
                   <TD className="whitespace-nowrap">{t.actual_start ? formatTime(t.actual_start) : "—"}–{t.actual_end ? formatTime(t.actual_end) : "—"} ({t.break_minutes}m)
                     <div className="space-x-1">{t.late_minutes > 0 && <Badge tone="warning">{t.late_minutes} min late</Badge>}{t.has_offline_events && <Badge>Offline/manual entry</Badge>}</div></TD>

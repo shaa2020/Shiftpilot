@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, MapPin, Navigation, Shirt } from "lucide-react";
 import { requireWorker } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { formatDate, formatDateTime, formatMoney, formatTime } from "@/lib/time";
+import { formatDate, formatDateTime, formatMoney, formatTime, isoToLocalInput } from "@/lib/time";
 import { nowMs } from "@/lib/time";
 import { getAttendancePolicy, hoursLabel } from "@/lib/data/worker";
 import { directionsUrl } from "@/lib/maps";
@@ -22,11 +22,7 @@ import { reportAbsenceAction, requestCorrectionAction } from "../../actions";
 
 export const metadata: Metadata = { title: "Shift" };
 
-function toLocalInput(iso: string | null) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-}
+const toLocalInput = (iso: string | null) => isoToLocalInput(iso);
 
 export default async function WorkerShiftPage({ params }: { params: Promise<{ id: string }> }) {
   const ctx = await requireWorker();

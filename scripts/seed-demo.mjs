@@ -140,7 +140,8 @@ async function worker(first, last, email, type, userId, city, lat, lon) {
     must(await admin.from("wage_rates").insert({ agency_id: agency, worker_id: w.id, contract_id: c.id, hourly_gross: 15.5, effective_from: localDate(-120), reason: "Demo" }), "wage");
   } else {
     const b = must(await admin.from("freelancer_businesses").insert({ agency_id: agency, worker_id: w.id, trade_name: `${first} ${last} Services`, kvk_number: "87654321", classification_status: "approved", classification_reviewed_at: new Date().toISOString() }).select("id").single(), "business");
-    must(await admin.from("freelancer_agreements").insert({ agency_id: agency, business_id: b.id, agreement_number: `ZA-${ref}`, status: "active", start_date: localDate(-120), service_description: "Bediening en schoonmaak op afroep", signed_at: new Date().toISOString() }), "agreement");
+    const ag = must(await admin.from("freelancer_agreements").insert({ agency_id: agency, business_id: b.id, agreement_number: `ZA-${ref}`, status: "active", start_date: localDate(-120), service_description: "Bediening en schoonmaak op afroep", signed_at: new Date().toISOString() }).select("id").single(), "agreement");
+    must(await admin.from("freelancer_rate_agreements").insert({ agency_id: agency, agreement_id: ag.id, hourly_rate: 27.5, effective_from: localDate(-120) }), "freelancer rate");
   }
   must(await admin.from("workers").update({ status: "active" }).eq("id", w.id), "activate worker");
   // Onboarding done, except the document upload (left open so the worker app shows a real to-do).

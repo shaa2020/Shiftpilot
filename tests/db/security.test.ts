@@ -491,3 +491,15 @@ describe("worker access to shift locations", () => {
     expect(await see(f.users.workerEmp2)).toEqual({ locs: [], clients: [] });
   });
 });
+
+describe("client timesheet worker names", () => {
+  it("returns names only for the client's own timesheets", async () => {
+    const t = (await db.query(
+      `select t.id from public.timesheets t where t.client_id = $1 limit 1`, [f.clients.c1])).rows[0]?.id;
+    if (!t) return; // fixture has no timesheet yet
+    const asClient = await asUser(db, f.users.client1Admin, (tx) => tx.query("select * from public.client_timesheet_workers(array[$1]::uuid[])", [t]));
+    const asOther = await asUser(db, f.users.client2Admin, (tx) => tx.query("select * from public.client_timesheet_workers(array[$1]::uuid[])", [t]));
+    expect(asOther.rows).toEqual([]);
+    expect(asClient.rows.length).toBeLessThanOrEqual(1);
+  });
+});

@@ -55,3 +55,23 @@ describe("shift windows", () => {
     expect(localTime("2027-07-15T06:00:00Z")).toBe("08:00");
   });
 });
+
+describe("localInputToIso", () => {
+  it("reads datetime-local and date values as Amsterdam time", async () => {
+    const { localInputToIso } = await import("./time");
+    expect(localInputToIso("2026-11-18T09:30")).toBe("2026-11-18T08:30:00.000Z"); // CET = UTC+1
+    expect(localInputToIso("2026-07-01T09:30")).toBe("2026-07-01T07:30:00.000Z"); // CEST = UTC+2
+    expect(localInputToIso("2026-07-01")).toBe("2026-06-30T22:00:00.000Z");
+    expect(() => localInputToIso("yesterday")).toThrow();
+  });
+});
+
+describe("isoToLocalInput", () => {
+  it("formats instants as Amsterdam datetime-local values", async () => {
+    const { isoToLocalInput, localInputToIso } = await import("./time");
+    expect(isoToLocalInput("2026-11-18T08:30:00.000Z")).toBe("2026-11-18T09:30");
+    expect(isoToLocalInput("2026-07-01T07:30:00.000Z")).toBe("2026-07-01T09:30");
+    expect(localInputToIso(isoToLocalInput("2026-03-29T00:15:00.000Z"))).toBe("2026-03-29T00:15:00.000Z");
+    expect(isoToLocalInput(null)).toBe("");
+  });
+});

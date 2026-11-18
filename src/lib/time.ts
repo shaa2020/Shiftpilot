@@ -80,6 +80,23 @@ export function zonedDateTime(date: string, time: string, tz: string = DEFAULT_T
   return result;
 }
 
+/**
+ * ISO instant for a form value typed in agency local time: "YYYY-MM-DDTHH:mm"
+ * (datetime-local) or "YYYY-MM-DD" (start of that day). Throws on other input.
+ */
+export function localInputToIso(value: string, tz: string = DEFAULT_TZ): string {
+  const m = value.match(/^(\d{4}-\d{2}-\d{2})(?:T(\d{2}:\d{2}))?/);
+  if (!m) throw new Error("Invalid date/time");
+  return zonedDateTime(m[1], m[2] ?? "00:00", tz).toISOString();
+}
+
+/** "YYYY-MM-DDTHH:mm" in agency local time, for datetime-local inputs. */
+export function isoToLocalInput(iso: string | Date | null | undefined, tz: string = DEFAULT_TZ): string {
+  if (!iso) return "";
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(iso)).map((p) => [p.type, p.value]));
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+}
+
 /** Start/end of a shift from local date and times; an end at or before the start rolls to the next day. */
 export function shiftWindow(date: string, start: string, end: string, tz: string = DEFAULT_TZ): { startsAt: Date; endsAt: Date } {
   const startsAt = zonedDateTime(date, start, tz);

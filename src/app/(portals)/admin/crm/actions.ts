@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { localInputToIso } from "@/lib/time";
 import { requireStaff } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { optionalText } from "@/lib/validation/agency";
@@ -19,7 +20,7 @@ const leadSchema = z.object({
   industry_id: uuid.or(z.literal("")).transform((v) => (v === "" ? null : v)).optional(),
   estimated_monthly_hours: z.union([z.literal(""), z.coerce.number().int().min(0)]).transform((v) => (v === "" ? null : v)).optional(),
   estimated_monthly_value: z.union([z.literal(""), z.coerce.number().min(0)]).transform((v) => (v === "" ? null : v)).optional(),
-  next_follow_up_at: z.string().or(z.literal("")).transform((v) => (v === "" ? null : new Date(v).toISOString())).optional(),
+  next_follow_up_at: z.string().or(z.literal("")).transform((v) => (v === "" ? null : localInputToIso(v))).optional(),
 });
 
 export async function createLeadAction(_p: ActionState, fd: FormData): Promise<ActionState> {
@@ -69,7 +70,7 @@ const activitySchema = z.object({
   activity_type: z.enum(["note", "call", "email", "meeting", "task"]),
   subject: optionalText(200),
   body: optionalText(5000),
-  due_at: z.string().or(z.literal("")).transform((v) => (v === "" ? null : new Date(v).toISOString())).optional(),
+  due_at: z.string().or(z.literal("")).transform((v) => (v === "" ? null : localInputToIso(v))).optional(),
 });
 
 export async function addActivityAction(leadId: string, _p: ActionState, fd: FormData): Promise<ActionState> {

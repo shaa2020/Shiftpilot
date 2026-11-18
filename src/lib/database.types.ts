@@ -7701,6 +7701,7 @@ export type Database = {
       client_review_timesheet: { Args: { p_timesheet_id: string; p_approve: boolean; p_comment?: string }; Returns: undefined };
       client_shift_staff: { Args: { p_shift_id: string }; Returns: { assignment_id: string; worker_display_name: string; position_name: string; status: Database["public"]["Enums"]["assignment_status"]; checked_in_at: string; checked_out_at: string; professional_summary: string; certificates: string[]; languages: string[] }[] };
       client_team: { Args: { p_client_id: string }; Returns: { membership_id: string; full_name: string; email: string; role: Database["public"]["Enums"]["client_member_role"]; status: Database["public"]["Enums"]["record_status"]; can_request_staff: boolean; can_approve_timesheets: boolean; can_view_finance: boolean; can_manage_users: boolean; is_self: boolean }[] };
+      client_timesheet_workers: { Args: { p_timesheet_ids: string[] }; Returns: { timesheet_id: string; worker_display_name: string }[] };
       complete_notification_delivery: { Args: { p_id: string; p_status: string; p_provider?: string; p_message_id?: string; p_error?: string }; Returns: undefined };
       confirm_assignment: { Args: { p_assignment_id: string }; Returns: undefined };
       consume_rate_limit: { Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: boolean };

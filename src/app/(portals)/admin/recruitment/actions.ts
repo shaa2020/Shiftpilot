@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { localInputToIso } from "@/lib/time";
 import { requireStaff } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { optionalText } from "@/lib/validation/agency";
@@ -20,7 +21,7 @@ const openingSchema = z.object({
   requirements_text: optionalText(5000),
   hours_indication: optionalText(200),
   pay_indication: optionalText(200),
-  closes_at: z.string().or(z.literal("")).transform((v) => (v === "" ? null : new Date(v).toISOString())).optional(),
+  closes_at: z.string().or(z.literal("")).transform((v) => (v === "" ? null : localInputToIso(v))).optional(),
 });
 
 export async function createOpeningAction(_p: ActionState, fd: FormData): Promise<ActionState> {
@@ -73,7 +74,7 @@ export async function assignRecruiterAction(_p: ActionState, fd: FormData): Prom
 }
 
 const interviewSchema = z.object({
-  scheduled_at: z.string().min(1, "Choose a date and time").transform((v) => new Date(v).toISOString()),
+  scheduled_at: z.string().min(1, "Choose a date and time").transform((v) => localInputToIso(v)),
   duration_minutes: z.coerce.number().int().min(5).max(480),
   mode: z.enum(["in_person", "video", "phone"]),
   location_or_link: optionalText(500),
