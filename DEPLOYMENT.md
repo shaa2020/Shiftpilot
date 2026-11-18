@@ -69,7 +69,7 @@ The owner receives an invitation email, sets a password, signs in, completes **A
 | --- | --- | --- |
 | Resend (email) | `RESEND_API_KEY`, `EMAIL_FROM` (verified domain) | Invitation links are shown to the inviter to share manually; nothing is reported as sent |
 | Sentry | `SENTRY_DSN` | Errors are logged as structured JSON to the host's logs only |
-| Scheduled jobs | `CRON_SECRET`; `vercel.json` schedules `/api/cron/dispatch` (every 5 min, needs Vercel Pro — otherwise use a daily schedule or an external scheduler sending `Authorization: Bearer $CRON_SECRET`) and `/api/cron/automations` (hourly) | No email/push/WhatsApp delivery, reminders, expiry processing or retention runs; in-app notifications still work |
+| Scheduled jobs | `CRON_SECRET`; `vercel.json` runs `/api/cron/automations` and `/api/cron/dispatch` once a day (Vercel Hobby limit). On Vercel Pro, change them to `7 * * * *` (hourly) and `*/5 * * * *` (every 5 minutes), or call them from an external scheduler with `Authorization: Bearer $CRON_SECRET` | No email/push/WhatsApp delivery, reminders, expiry processing or retention runs; in-app notifications still work |
 | Web Push | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (`npx web-push generate-vapid-keys`) | Push opt-in shows "awaiting configuration" |
 | WhatsApp Business Cloud | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` | Deliveries recorded as `skipped_unconfigured` |
 | Operations assistant | `ANTHROPIC_API_KEY` (add Anthropic to the processing register first) | Assistant page shows "awaiting configuration" |
