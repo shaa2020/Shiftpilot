@@ -18,6 +18,10 @@
 | `WHATSAPP_ACCESS_TOKEN` | optional | **server only** | WhatsApp Business Cloud API token; deliveries are opt-in per user |
 | `WHATSAPP_PHONE_NUMBER_ID` | with WhatsApp | server only | Sending phone number id |
 | `ANTHROPIC_API_KEY` | optional | **server only** | Enables the read-only operations assistant (`/admin/assistant`). Questions and looked-up data are sent to Anthropic — record this in the processing register |
+| `WHATSAPP_TEMPLATE_NAME` / `WHATSAPP_TEMPLATE_LANGUAGE` | recommended with WhatsApp | server only | Approved template with two body variables; without it messages only deliver inside a 24-hour service window |
+| `CLAMAV_HOST` / `CLAMAV_PORT` | recommended | server only | clamd for malware scanning of every upload (INSTREAM, default port 3310). Infected files are rejected; if the scanner is unreachable uploads are refused rather than stored unscanned. Unset: files are stored as "not scanned" and shown so to verifiers |
+| `GEOCODING_PROVIDER` | optional | server only | `pdok` (Dutch government Locatieserver, free, NL only) or `google`. Fills coordinates for travel-distance matching; worker homes at postcode level only |
+| `GOOGLE_MAPS_API_KEY` | with `google` | **server only** | Google Geocoding API key |
 | `ENFORCE_STAFF_MFA` | no (default `false`) | server only | When `true`, agency staff must enrol and use TOTP MFA before opening Admin HQ |
 
 Test-only variables:

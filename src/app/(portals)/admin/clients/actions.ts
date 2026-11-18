@@ -1,4 +1,5 @@
 "use server";
+import { geocode } from "@/lib/geo/geocode";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -56,7 +57,9 @@ export async function addLocationAction(clientId: string, _prev: ActionState, fo
   const parsed = locationSchema.safeParse(formObject(formData));
   if (!parsed.success) return { errors: zodErrors(parsed.error), message: "Please correct the highlighted fields." };
   const supabase = await createClient();
-  const { error } = await supabase.from("client_locations").insert({ ...parsed.data, agency_id: ctx.agencyId, client_id: id.parse(clientId) });
+  const d = parsed.data;
+  const point = d.latitude == null || d.longitude == null ? await geocode({ address: d.address_line1, postalCode: d.postal_code, city: d.city, country: d.country_code }) : null;
+  const { error } = await supabase.from("client_locations").insert({ ...d, ...(point ? { latitude: point.latitude, longitude: point.longitude } : {}), agency_id: ctx.agencyId, client_id: id.parse(clientId) });
   if (error) return { message: dbErrorMessage(error) };
   revalidatePath(`/admin/clients/${clientId}`);
   return { ok: true, message: "Location added." };

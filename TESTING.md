@@ -4,9 +4,10 @@
 
 | Suite | Command | Runs against | Count (last local run) |
 | --- | --- | --- | --- |
-| Unit | `npm test` | Node (Vitest) | 58 tests, 16 files — passing |
-| Database (RLS, scheduling, matching, attendance, finance, invoicing, compliance/GDPR, automation) | `npm run test:db` | PostgreSQL 16 + Supabase shim, all migrations applied from scratch | 101 tests, 8 files — passing |
+| Unit | `npm test` | Node (Vitest) | 69 tests, 21 files — passing |
+| Database (RLS, scheduling, matching, attendance, finance, invoicing, compliance/GDPR, automation, MFA) | `npm run test:db` | PostgreSQL 16 + Supabase shim, all migrations applied from scratch | 103 tests, 8 files — passing |
 | E2E smoke | `npm run test:e2e` | Production build (`next start`) in Chromium, desktop + Pixel 7 | 128 tests (64 × 2 viewports) — passing |
+| Signed-in E2E | `npm run test:e2e:auth` | Local Supabase stack (`supabase start`) + `npm run seed:demo` | 6 flows (owner, planner, client, worker, freelancer, account) — run by the `e2e-supabase` CI job; **not yet executed** (needs Docker image pulls, blocked in the build sandbox) |
 | Static checks | `npm run lint`, `npm run typecheck` | ESLint, TypeScript strict | passing |
 | Production build | `npm run build` | Next.js 16 (Turbopack) | passing |
 
@@ -70,11 +71,8 @@ MFA challenge requires a session.
 
 ## Not yet covered (honest status)
 
-- **Signed-in browser flows** (login → portal, invitation acceptance, settings save) need a running Supabase Auth
-  server. GitHub release downloads of the Auth/PostgREST binaries are blocked in the current build sandbox, so these
-  could not be executed here. They are planned as the `e2e-supabase` CI job (Supabase CLI + Docker) together with the
-  full 22-step workflow test in Phase 4. The underlying database behaviour (invitation acceptance, RLS) is covered by
-  the database suite.
+- **Signed-in browser flows** are written (`tests/e2e-auth`) and wired into the `e2e-supabase` CI job, but have not
+  run yet: the build sandbox cannot pull Supabase container images. The first CI run on GitHub will execute them.
 - Real provider calls (Resend, Web Push, WhatsApp, Anthropic, Sentry) are not exercised in tests; adapters are tested
   for their "not configured" and error paths only.
 - Service-worker offline behaviour and push display are not automated (served files are checked).

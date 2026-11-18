@@ -150,6 +150,8 @@ test.describe("finance endpoints", () => {
     }
     expect((await request.get("/api/invoices/not-a-uuid/pdf", { maxRedirects: 0 })).status()).toBe(404);
     expect((await request.get("/api/payroll-exports/not-a-uuid", { maxRedirects: 0 })).status()).toBe(404);
+    expect((await request.get("/api/invoices/not-a-uuid/ubl", { maxRedirects: 0 })).status()).toBe(404);
+    expect([302, 307]).toContain((await request.get("/api/invoices/00000000-0000-4000-8000-000000000000/ubl", { maxRedirects: 0 })).status());
   });
 });
 

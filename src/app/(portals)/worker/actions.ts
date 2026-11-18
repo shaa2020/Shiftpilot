@@ -1,4 +1,5 @@
 "use server";
+import { geocode } from "@/lib/geo/geocode";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireWorker } from "@/lib/auth/session";
@@ -156,7 +157,9 @@ export async function updateOwnDetailsAction(_p: ActionState, fd: FormData): Pro
   if (!parsed.success) return { errors: zodErrors(parsed.error) };
   const { phone, city, postal_code, max_travel_km, professional_summary, ...priv } = parsed.data;
   const supabase = await createClient();
-  const w = await supabase.from("workers").update({ phone, city, postal_code, max_travel_km, professional_summary }).eq("id", ctx.workerId);
+  // Postcode-level coordinates for travel-distance matching (only when geocoding is enabled).
+  const point = await geocode({ postalCode: postal_code, city });
+  const w = await supabase.from("workers").update({ phone, city, postal_code, max_travel_km, professional_summary, ...(point ? { home_latitude: point.latitude, home_longitude: point.longitude } : {}) }).eq("id", ctx.workerId);
   if (w.error) return { message: dbErrorMessage(w.error) };
   const p = await supabase.from("worker_private_details").update(priv).eq("worker_id", ctx.workerId);
   if (p.error) return { message: dbErrorMessage(p.error) };

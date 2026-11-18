@@ -42,7 +42,7 @@ export default async function ClientInvoicesPage() {
                   <TD className="text-right tabular-nums">{formatMoney(Number(i.total))}</TD>
                   <TD className="text-xs text-muted-foreground">{i.payments.map((p) => `${p.paid_on}: ${formatMoney(Number(p.amount))}`).join(", ") || "—"}</TD>
                   <TD><StatusBadge status={i.status} /></TD>
-                  <TD className="text-right"><a className="inline-flex items-center gap-1 text-sm text-primary hover:underline" href={`/api/invoices/${i.id}/pdf`} target="_blank" rel="noopener"><Download className="size-4" aria-hidden />PDF</a></TD>
+                  <TD className="text-right"><a className="inline-flex items-center gap-1 text-sm text-primary hover:underline" href={`/api/invoices/${i.id}/pdf`} target="_blank" rel="noopener"><Download className="size-4" aria-hidden />PDF</a><a className="ml-3 inline-flex items-center gap-1 text-sm text-primary hover:underline" href={`/api/invoices/${i.id}/ubl`}><Download className="size-4" aria-hidden />UBL</a></TD>
                 </TR>
               ))}
             </TBody>

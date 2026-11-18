@@ -54,6 +54,7 @@ with human-readable messages that the UI can display.
 | `GET /api/privacy/export?email=` | `gdpr.manage` | JSON subject export, audited |
 | `GET /api/cron/dispatch` | cron (`Authorization: Bearer $CRON_SECRET`) | Sends queued email/push/WhatsApp deliveries |
 | `GET /api/cron/automations` | cron | Runs `run_scheduled_automations()` |
+| `GET /api/invoices/[id]/ubl` | as the PDF (RLS) | UBL 2.1 / Peppol BIS 3 e-invoice (credit notes as UBL CreditNote) for Exact Online, Moneybird, AFAS, Twinfield, Snelstart |
 | `GET /api/health` | public | Status and which integrations are configured (booleans only) |
 
 ## D. RPC functions added in later phases
@@ -71,6 +72,7 @@ Documents/GDPR (0022): `verify_document`, `worker_document_checklist`, `decide_c
 `anonymise_application`, `anonymise_worker`, `my_agencies`, `apply_retention` (service role).
 Automation (0023): `register_push_subscription`; service role only: `complete_notification_delivery`,
 `delivery_context`, `run_scheduled_automations`.
+MFA (0024): `my_mfa_requirement(agency)` returns `ok`, `verify` or `enrol`; `app.has_permission` requires aal2 when the user has a verified factor or the agency requires staff MFA.
 
 The operations assistant (`/admin/assistant`) has no API of its own: its tools are read-only queries executed with the
 signed-in user's Supabase session (`src/lib/assistant/tools.ts`).

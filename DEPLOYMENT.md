@@ -82,6 +82,17 @@ The owner receives an invitation email, sets a password, signs in, completes **A
 - Trigger each cron once manually: `curl -H "Authorization: Bearer $CRON_SECRET" https://<domain>/api/cron/automations`.
 - Run the manual acceptance checklist in TESTING.md with real accounts.
 
+## Preview / staging with demo data
+
+On a non-production environment (local `supabase start` or a staging project):
+
+```bash
+npm run seed:demo   # needs NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+```
+
+It creates the fictitious agency "Demo Uitzendbureau" with logins for owner, planner, finance, a client and two
+workers (password printed at the end; refuses to run when `NEXT_PUBLIC_APP_ENV=production`).
+
 ## CI/CD
 
 `.github/workflows/ci.yml` runs on every push and pull request:
@@ -90,6 +101,7 @@ The owner receives an invitation email, sets a password, signs in, completes **A
 - **database** — applies all migrations to PostgreSQL 16 and runs the RLS, concurrency and finance suites; verifies the
   generated types are current.
 - **supabase** — applies the migrations to the real Supabase database stack (`supabase db start` / `db reset`).
+- **e2e-supabase** — starts a local Supabase stack, builds the app, seeds demo data and runs the signed-in flows.
 
 ## Release checklist
 

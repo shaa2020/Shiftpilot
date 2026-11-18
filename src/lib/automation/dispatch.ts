@@ -64,7 +64,7 @@ export async function dispatchDeliveries(limit = 50) {
       provider = "whatsapp_cloud";
       if (!c.phone) { outcome = "dead"; err = "Recipient has no phone number"; }
       else {
-        const res = await sendWhatsApp(c.phone, `${c.title}\n${c.body ?? ""}\n${appUrl}${c.link_path ?? ""}`);
+        const res = await sendWhatsApp(c.phone, c.title, `${c.body ?? ""} ${appUrl}${c.link_path ?? ""}`);
         if (res.status === "sent") { outcome = "sent"; messageId = res.providerMessageId; }
         else if (res.status === "not_configured") outcome = "skipped_unconfigured";
         else err = res.error;

@@ -1,6 +1,6 @@
 # Development status
 
-_Last updated: 2026-11-17 · Branch: `claude/shiftpilot-production-dev-7enlb1`_
+_Last updated: 2026-11-18 · Branch: `claude/shiftpilot-production-dev-7enlb1`_
 
 **Overall: all eight build phases are implemented and tested locally. The product is NOT yet ready for commercial launch:
 it has never been deployed, signed-in flows have not been run end-to-end against a real Supabase project, and the
@@ -41,6 +41,13 @@ Invoice generation from approved timesheets (weekend/night/holiday classificatio
 - TOTP two-factor authentication for all users (enrol on `/account`, challenge on `/mfa`); once enrolled, every portal requires aal2; `ENFORCE_STAFF_MFA=true` makes it mandatory for staff.
 - Security fixes found during this phase: SECURITY DEFINER functions no longer rely on `current_user` (always the owner there); tests scan for this and verify service-only grants.
 
+### Post-phase hardening ✅ (migration 0024)
+- Two-factor enforcement inside the database for staff, plus a per-agency "require staff MFA" setting with self-lockout guard.
+- ClamAV malware scanning of all uploads (portal and careers site); scan status shown to verifiers.
+- WhatsApp approved-template messages; UBL 2.1 / Peppol BIS 3 e-invoice export for accounting import.
+- Opt-in geocoding (PDOK or Google) so travel-distance matching gets coordinates.
+- Demo seed (`npm run seed:demo`) and signed-in E2E tests with a CI job on a local Supabase stack.
+
 ## Launch gates (not done — cannot be done from the build environment)
 
 | Gate | Why it matters |
@@ -49,24 +56,27 @@ Invoice generation from approved timesheets (weekend/night/holiday classificatio
 | End-to-end test of signed-in flows against real Supabase Auth/Storage (invite → onboarding → shift → check-in → timesheet → invoice) | Only the database layer and signed-out pages are tested automatically |
 | Legal review of privacy notice, retention periods, freelancer classification questions, invoice/VAT texts, compliance rule parameters | ShiftPilot records decisions; it does not make them legally sound |
 | Independent penetration test | Internal review only so far |
-| Malware scanning of uploads | Uploads are type-checked by content, but not virus-scanned |
+| Host a ClamAV service and set `CLAMAV_HOST` | Scanning is implemented; without a scanner uploads are marked "not scanned" |
+| First green run of the `e2e-supabase` CI job | Signed-in tests are written but have never executed |
 | Backup and restore rehearsal (BACKUP_AND_RECOVERY.md) | Procedure documented, never executed |
 | Load/performance test with realistic data volumes | Not measured |
 | Configure Resend (verified domain), VAPID keys, WhatsApp templates, Sentry, custom SMTP for Supabase Auth | Integrations report "awaiting configuration" until then |
 
 ## Known limitations
-- WhatsApp adapter sends plain text; Meta accepts business-initiated messages only with approved templates outside a 24-hour window. Template support is not implemented.
+- WhatsApp needs an approved template in Meta Business Manager (`WHATSAPP_TEMPLATE_NAME`); without one, plain text only delivers inside a 24-hour window.
+- Accounting/payroll packages are integrated by file (UBL e-invoices, payroll CSV), not by live API connections.
 - Payroll export is a data export for the payroll provider; ShiftPilot does not calculate tax, social security or holiday pay.
 - Cron dispatch every 5 minutes needs a hosting plan that allows it (Vercel Pro); on lower plans set the schedule to daily or use an external scheduler.
 - The assistant sends the user's question and the data it looks up to Anthropic; record this in the processing register before enabling it.
 - Rate limiting fails open without `SUPABASE_SERVICE_ROLE_KEY`.
 - The calendar and charts were verified to render, not visually reviewed with production data.
 
-## Tests (last local run, 2026-11-17)
+## Tests (last local run, 2026-11-18)
 | Suite | Result |
 | --- | --- |
-| Unit (Vitest) | 58 / 58 passed (16 files) |
-| Database (RLS, scheduling, matching, attendance, finance, invoicing, compliance/GDPR, automation) | 101 / 101 passed (8 files) |
+| Unit (Vitest) | 69 / 69 passed (21 files) |
+| Database (incl. MFA enforcement) | 103 / 103 passed (8 files) |
+| Signed-in E2E | written, not yet run (CI job `e2e-supabase`) |
 | E2E smoke (Playwright, production build, desktop + mobile) | 128 / 128 passed |
 | Lint, typecheck, production build | passed |
 

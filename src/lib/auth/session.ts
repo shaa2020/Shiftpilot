@@ -105,13 +105,15 @@ export async function requireStaff(...required: Permission[]): Promise<StaffCont
   const user = await requireUser("/admin");
   const m = await getMemberships();
   if (m.staffAgencies.length === 0) forbidden();
-  // Optional platform policy: staff must have enrolled TOTP (requireUser already enforces aal2 once enrolled).
-  if (serverEnv.enforceStaffMfa() && (await getAssurance()).next !== "aal2") redirect("/account?mfa=required");
-
   const preferred = (await cookies()).get(ACTIVE_AGENCY_COOKIE)?.value;
   const agency = m.staffAgencies.find((a) => a.agencyId === preferred) ?? m.staffAgencies[0];
 
   const supabase = await createClient();
+  // MFA: platform-wide policy (env) or agency policy / enrolled factor (enforced by the database too).
+  if (serverEnv.enforceStaffMfa() && (await getAssurance()).next !== "aal2") redirect("/account?mfa=required");
+  const { data: mfa } = await supabase.rpc("my_mfa_requirement", { p_agency_id: agency.agencyId });
+  if (mfa === "enrol") redirect("/account?mfa=required");
+  if (mfa === "verify") redirect("/mfa?next=/admin");
   const { data } = await supabase.rpc("my_permissions", { p_agency_id: agency.agencyId });
   const permissions = new Set((data ?? []).filter(isPermission));
   for (const p of required) if (!permissions.has(p)) forbidden();

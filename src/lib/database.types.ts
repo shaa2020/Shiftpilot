@@ -104,6 +104,7 @@ export type Database = {
           updated_at: string;
           payroll_night_from: string;
           payroll_night_to: string;
+          require_staff_mfa: boolean;
         };
         Insert: {
           agency_id: string;
@@ -130,6 +131,7 @@ export type Database = {
           updated_at?: string;
           payroll_night_from?: string;
           payroll_night_to?: string;
+          require_staff_mfa?: boolean;
         };
         Update: {
           agency_id?: string;
@@ -156,6 +158,7 @@ export type Database = {
           updated_at?: string;
           payroll_night_from?: string;
           payroll_night_to?: string;
+          require_staff_mfa?: boolean;
         };
         Relationships: [
             {
@@ -2200,6 +2203,8 @@ export type Database = {
           sha256: string | null;
           uploaded_by: string | null;
           created_at: string;
+          scan_status: string;
+          scan_engine: string | null;
         };
         Insert: {
           id?: string;
@@ -2214,6 +2219,8 @@ export type Database = {
           sha256?: string | null;
           uploaded_by?: string | null;
           created_at?: string;
+          scan_status?: string;
+          scan_engine?: string | null;
         };
         Update: {
           id?: string;
@@ -2228,6 +2235,8 @@ export type Database = {
           sha256?: string | null;
           uploaded_by?: string | null;
           created_at?: string;
+          scan_status?: string;
+          scan_engine?: string | null;
         };
         Relationships: [
             {
@@ -7715,6 +7724,7 @@ export type Database = {
       my_agencies: { Args: never; Returns: { agency_id: string; name: string }[] };
       my_assignment_pay: { Args: { p_assignment_id: string }; Returns: { pay_basis: string; hourly_amount: number; fixed_fee: number; currency: string }[] };
       my_attendance_policy: { Args: { p_worker_id: string }; Returns: { location_verification_enabled: boolean; location_privacy_notice: string; timezone: string }[] };
+      my_mfa_requirement: { Args: { p_agency_id: string }; Returns: string };
       my_permissions: { Args: { p_agency_id: string }; Returns: string[] };
       my_uninvoiced_timesheets: { Args: { p_worker_id: string }; Returns: { timesheet_id: string; scheduled_start: string; shift_title: string; worked_minutes: number; hourly_amount: number; fixed_fee: number; amount: number }[] };
       public_job_openings: { Args: { p_agency_slug?: string; p_job_slug?: string }; Returns: { id: string; agency_id: string; agency_slug: string; agency_name: string; title: string; slug: string; location_city: string; description: string; requirements_text: string; hours_indication: string; pay_indication: string; engagement_types: Database["public"]["Enums"]["engagement_type"][]; published_at: string; closes_at: string }[] };

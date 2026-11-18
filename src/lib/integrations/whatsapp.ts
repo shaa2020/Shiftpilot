@@ -5,12 +5,27 @@ export type WhatsAppResult = { status: "sent"; providerMessageId: string } | { s
 
 /**
  * WhatsApp Business Cloud API adapter. Awaiting configuration unless
- * WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_NUMBER_ID are set. Business-initiated
- * conversations normally require approved templates; this adapter sends a text
- * message, which Meta only accepts inside an open 24-hour service window.
+ * WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_NUMBER_ID are set.
+ *
+ * Business-initiated messages outside a 24-hour service window must use an
+ * approved template. Set WHATSAPP_TEMPLATE_NAME (and WHATSAPP_TEMPLATE_LANGUAGE,
+ * default "nl") to a template with two body variables: {{1}} = title,
+ * {{2}} = details + link. Without a template, a plain text message is sent,
+ * which Meta only delivers inside an open service window.
  * Deliveries are opt-in per user (notification preferences).
  */
-export async function sendWhatsApp(toE164: string, text: string): Promise<WhatsAppResult> {
+export function whatsappPayload(to: string, title: string, details: string, template?: { name: string; language: string }) {
+  const clip = (v: string, n: number) => v.replace(/\s+/g, " ").trim().slice(0, n) || "-";
+  if (template) {
+    return {
+      messaging_product: "whatsapp", to, type: "template",
+      template: { name: template.name, language: { code: template.language }, components: [{ type: "body", parameters: [{ type: "text", text: clip(title, 200) }, { type: "text", text: clip(details, 800) }] }] },
+    };
+  }
+  return { messaging_product: "whatsapp", to, type: "text", text: { body: `${title}\n${details}`.slice(0, 4000) } };
+}
+
+export async function sendWhatsApp(toE164: string, title: string, details: string): Promise<WhatsAppResult> {
   const token = serverEnv.whatsappToken();
   const phoneId = serverEnv.whatsappPhoneNumberId();
   if (!token || !phoneId) return { status: "not_configured" };
@@ -20,7 +35,7 @@ export async function sendWhatsApp(toE164: string, text: string): Promise<WhatsA
     const res = await fetch(`https://graph.facebook.com/v21.0/${encodeURIComponent(phoneId)}/messages`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body: text.slice(0, 4000) } }),
+      body: JSON.stringify(whatsappPayload(to, title, details, process.env.WHATSAPP_TEMPLATE_NAME ? { name: process.env.WHATSAPP_TEMPLATE_NAME, language: process.env.WHATSAPP_TEMPLATE_LANGUAGE || "nl" } : undefined)),
       signal: AbortSignal.timeout(10_000),
     });
     const body = (await res.json().catch(() => ({}))) as { messages?: { id: string }[]; error?: { message?: string } };

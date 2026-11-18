@@ -426,3 +426,46 @@ describe("function security", () => {
     expect(r.rows).toEqual([]);
   });
 });
+
+describe("database-level MFA", () => {
+  const claims = (sub: string, aal: string) => JSON.stringify({ sub, role: "authenticated", aal });
+  async function asAal<T>(user: string, aal: string, fn: (tx: import("pg").PoolClient) => Promise<T>) {
+    const tx = await db.connect();
+    try {
+      await tx.query("begin");
+      await tx.query("select set_config('request.jwt.claims', $1, true)", [claims(user, aal)]);
+      await tx.query("set local role authenticated");
+      return await fn(tx);
+    } finally {
+      await tx.query("rollback").catch(() => undefined);
+      tx.release();
+    }
+  }
+  const clientCount = (tx: import("pg").PoolClient) => tx.query("select count(*)::int n from public.clients where agency_id = $1", [f.agencyA]).then((r) => r.rows[0].n as number);
+
+  it("an enrolled staff member needs an aal2 session for staff data", async () => {
+    const before = await asAal(f.users.opsA, "aal1", clientCount);
+    expect(before).toBeGreaterThan(0);
+    const factor = (await db.query("insert into auth.mfa_factors (user_id, status) values ($1, 'verified') returning id", [f.users.opsA])).rows[0].id;
+    try {
+      expect(await asAal(f.users.opsA, "aal1", clientCount)).toBe(0);
+      expect(await asAal(f.users.opsA, "aal1", (tx) => tx.query("select public.my_mfa_requirement($1) r", [f.agencyA]).then((r) => r.rows[0].r))).toBe("verify");
+      expect(await asAal(f.users.opsA, "aal1", (tx) => tx.query("select count(*)::int n from public.my_permissions($1)", [f.agencyA]).then((r) => r.rows[0].n))).toBe(0);
+      expect(await asAal(f.users.opsA, "aal2", clientCount)).toBe(before);
+    } finally {
+      await db.query("delete from auth.mfa_factors where id = $1", [factor]);
+    }
+  });
+
+  it("an agency can require MFA for all staff", async () => {
+    await db.query("update public.agency_settings set require_staff_mfa = true where agency_id = $1", [f.agencyA]);
+    try {
+      expect(await asAal(f.users.financeA, "aal1", clientCount)).toBe(0);
+      expect(await asAal(f.users.financeA, "aal1", (tx) => tx.query("select public.my_mfa_requirement($1) r", [f.agencyA]).then((r) => r.rows[0].r))).toBe("enrol");
+      // Workers and client users are not affected by the staff policy.
+      expect(await asAal(f.users.client1Admin, "aal1", (tx) => tx.query("select count(*)::int n from public.clients where id = $1", [f.clients.c1]).then((r) => r.rows[0].n))).toBe(1);
+    } finally {
+      await db.query("update public.agency_settings set require_staff_mfa = false where agency_id = $1", [f.agencyA]);
+    }
+  });
+});

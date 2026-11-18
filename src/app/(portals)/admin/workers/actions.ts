@@ -1,4 +1,5 @@
 "use server";
+import { geocode } from "@/lib/geo/geocode";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -34,7 +35,9 @@ export async function updateWorkerProfileAction(workerId: string, _prev: ActionS
   const parsed = workerProfileSchema.safeParse(formObject(formData));
   if (!parsed.success) return invalid(parsed.error);
   const supabase = await createClient();
-  const { data, error } = await supabase.from("workers").update(parsed.data).eq("id", uuid.parse(workerId)).select("id");
+  const pd = parsed.data as typeof parsed.data & { postal_code?: string | null; city?: string | null };
+  const point = await geocode({ postalCode: pd.postal_code, city: pd.city });
+  const { data, error } = await supabase.from("workers").update({ ...parsed.data, ...(point ? { home_latitude: point.latitude, home_longitude: point.longitude } : {}) }).eq("id", uuid.parse(workerId)).select("id");
   if (error || !data?.length) return { message: dbErrorMessage(error) };
   refresh(workerId);
   return { ok: true, message: "Profile saved." };

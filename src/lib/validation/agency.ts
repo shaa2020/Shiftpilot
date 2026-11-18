@@ -35,6 +35,7 @@ export const agencySettingsSchema = z
     late_threshold_minutes: z.coerce.number().int().min(0).max(120),
     missing_checkin_alert_minutes: z.coerce.number().int().min(0).max(240),
     location_verification_enabled: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()),
+    require_staff_mfa: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()),
     location_privacy_notice: optionalText(5000),
   })
   .refine((d) => !d.location_verification_enabled || (d.location_privacy_notice?.length ?? 0) >= 50, {

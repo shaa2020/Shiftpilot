@@ -137,6 +137,13 @@ export function AgencySettingsForm({ agency, settings }: { agency: Agency; setti
               <span className="block text-muted-foreground">Requires a lawful basis and a published privacy notice.</span>
             </span>
           </label>
+          <label className="flex items-start gap-2 text-sm sm:col-span-2">
+            <input type="checkbox" name="require_staff_mfa" defaultChecked={settings.require_staff_mfa} className="mt-0.5 size-4 accent-primary" />
+            <span>
+              <span className="font-medium">Require two-factor authentication for all staff</span>
+              <span className="block text-muted-foreground">Staff without an authenticator app are sent to set one up; the database refuses staff access from sessions without a second factor. Set up your own first.</span>
+            </span>
+          </label>
           <FormField id="location_privacy_notice" label="Location privacy notice" error={e.location_privacy_notice} className="sm:col-span-2">
             <Textarea name="location_privacy_notice" rows={4} defaultValue={settings.location_privacy_notice ?? ""} />
           </FormField>

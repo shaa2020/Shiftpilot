@@ -24,7 +24,7 @@ export default async function DocumentsQueuePage({ searchParams }: { searchParam
   const supabase = await createClient();
   let query = supabase
     .from("documents")
-    .select("id, title, status, issued_on, expires_on, current_version, rejection_reason, owner_type, updated_at, worker_id, client_id, document_types(name, requires_expiry), workers(first_name, last_name, worker_number), clients(name)")
+    .select("id, title, status, issued_on, expires_on, current_version, rejection_reason, owner_type, updated_at, worker_id, client_id, document_types(name, requires_expiry), workers(first_name, last_name, worker_number), clients(name), document_versions(version, scan_status)")
     .eq("agency_id", ctx.agencyId).is("archived_at", null).eq("status", status as "pending").order("updated_at", { ascending: status !== "pending" }).limit(300);
   if (status === "pending") query = query.gt("current_version", 0);
   if (q) query = query.ilike("title", `%${q.replace(/[%_,()]/g, "")}%`);
@@ -45,6 +45,10 @@ export default async function DocumentsQueuePage({ searchParams }: { searchParam
                     <p className="font-medium">{d.title}</p>
                     <p className="text-xs text-muted-foreground">{d.document_types?.name} · v{d.current_version} · updated {formatDate(d.updated_at)}</p>
                     {d.current_version > 0 && <a className="text-xs text-primary hover:underline" href={`/api/documents/${d.id}`} target="_blank" rel="noopener">Open file</a>}
+                    {(() => {
+                      const scan = d.document_versions.find((v) => v.version === d.current_version)?.scan_status;
+                      return scan ? <span className={`ml-2 text-xs ${scan === "clean" ? "text-success" : "text-warning"}`}>{scan === "clean" ? "Virus scan: clean" : "Not virus-scanned"}</span> : null;
+                    })()}
                   </TD>
                   <TD>
                     {d.workers ? <Link className="hover:underline" href={`/admin/workers/${d.worker_id}?tab=documents`}>{d.workers.first_name} {d.workers.last_name}<span className="block text-xs text-muted-foreground">{d.workers.worker_number}</span></Link>

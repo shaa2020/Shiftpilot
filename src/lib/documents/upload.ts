@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { dbErrorMessage, type ActionState } from "@/lib/actions/state";
 import { ALLOWED_UPLOAD, MAX_UPLOAD_BYTES, detectUploadType } from "./detect";
+import { scanBytes } from "./scan";
 
 export interface UploadInput {
   agencyId: string;
@@ -33,6 +34,12 @@ export async function uploadDocumentVersion(input: UploadInput): Promise<ActionS
   const bytes = new Uint8Array(await file.arrayBuffer());
   const mime = detectUploadType(bytes);
   if (!mime) return { errors: { file: "Upload a PDF, JPG, PNG or WebP file" } };
+  const scan = await scanBytes(bytes);
+  if (scan.status === "infected") {
+    console.warn(JSON.stringify({ level: "warn", msg: "upload_rejected_malware", signature: scan.signature, user: input.userId }));
+    return { errors: { file: "This file was rejected by the virus scanner." } };
+  }
+  if (scan.status === "error") return { errors: { file: "The file could not be checked for viruses. Please try again in a moment." } };
   const supabase = await createClient();
 
   let documentId = input.documentId ?? null;
@@ -57,6 +64,7 @@ export async function uploadDocumentVersion(input: UploadInput): Promise<ActionS
   const safeName = file.name.replace(/[^\w.\- ]+/g, "_").slice(0, 120) || `document.${ALLOWED_UPLOAD[mime]}`;
   const { error } = await supabase.from("document_versions").insert({
     agency_id: input.agencyId, document_id: documentId, version: 1, storage_path: path, file_name: safeName, mime_type: mime, size_bytes: bytes.length, uploaded_by: input.userId,
+    scan_status: scan.status, scan_engine: scan.status === "clean" ? scan.engine : null,
   });
   if (error) return { message: dbErrorMessage(error, "The upload could not be recorded.") };
   return { ok: true, message: "Uploaded. The agency will verify it.", documentId };

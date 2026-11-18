@@ -87,3 +87,48 @@ jobs:
         run: supabase db start
       - name: Re-apply from scratch
         run: supabase db reset --local
+
+  e2e-supabase:
+    name: Signed-in E2E on a local Supabase stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3100
+      NEXT_PUBLIC_APP_ENV: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start Supabase (API, Auth, Storage, DB)
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,supavisor,postgres-meta
+      - name: Export Supabase credentials
+        run: |
+          supabase status -o env > .supabase.env
+          . ./.supabase.env
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+          } >> "$GITHUB_ENV"
+          rm .supabase.env
+      - run: npm ci
+      - run: npm run build
+      - name: Seed demo data
+        run: node scripts/seed-demo.mjs
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: Signed-in flows
+        run: npx playwright test -c playwright.auth.config.ts --trace off
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-auth
+          path: playwright-report-auth
+          retention-days: 7

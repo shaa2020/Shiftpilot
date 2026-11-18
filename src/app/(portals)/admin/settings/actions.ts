@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { requireStaff } from "@/lib/auth/session";
+import { getAssurance, requireStaff } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { agencySettingsSchema } from "@/lib/validation/agency";
 import { fieldErrors } from "@/lib/validation/auth";
@@ -12,7 +12,11 @@ export async function updateAgencySettingsAction(_prev: FormState, formData: For
   if (!parsed.success) return { errors: fieldErrors(parsed.error), message: "Please correct the highlighted fields." };
   const d = parsed.data;
   const supabase = await createClient();
-  const { data: current } = await supabase.from("agency_settings").select("wtta_status").eq("agency_id", ctx.agencyId).single();
+  const { data: current } = await supabase.from("agency_settings").select("wtta_status, require_staff_mfa").eq("agency_id", ctx.agencyId).single();
+  // Enabling mandatory MFA without a second factor of your own would lock you out of Admin HQ.
+  if (d.require_staff_mfa && !current?.require_staff_mfa && (await getAssurance()).current !== "aal2") {
+    return { errors: { require_staff_mfa: "Set up two-factor authentication on your account first" }, message: "Set up two-factor authentication on your account (Account & security) before requiring it for staff." };
+  }
 
   const agency = await supabase
     .from("agencies")
@@ -42,6 +46,7 @@ export async function updateAgencySettingsAction(_prev: FormState, formData: For
       missing_checkin_alert_minutes: d.missing_checkin_alert_minutes,
       location_verification_enabled: d.location_verification_enabled,
       location_privacy_notice: d.location_privacy_notice ?? null,
+      require_staff_mfa: d.require_staff_mfa,
     })
     .eq("agency_id", ctx.agencyId)
     .select("agency_id")

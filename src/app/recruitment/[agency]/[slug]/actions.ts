@@ -5,6 +5,7 @@ import { createAdminClient, isAdminClientConfigured } from "@/lib/supabase/admin
 import { getOpening } from "@/lib/data/careers";
 import { clientIp, hashIdentifier, rateLimit } from "@/lib/security/request";
 import { formObject, zodErrors, type ActionState } from "@/lib/actions/state";
+import { scanBytes } from "@/lib/documents/scan";
 import { MAX_CV_BYTES, PRIVACY_NOTICE_VERSION, applicationSchema, detectCvType } from "@/lib/validation/application";
 
 /**
@@ -27,11 +28,16 @@ export async function submitApplicationAction(agencySlug: string, jobSlug: strin
 
   const file = fd.get("cv");
   let cv: { bytes: Uint8Array; mime: string; ext: string; name: string } | null = null;
+  let cvScan: Awaited<ReturnType<typeof scanBytes>> = { status: "not_scanned" };
   if (file instanceof File && file.size > 0) {
     if (file.size > MAX_CV_BYTES) return { errors: { cv: "The file is larger than 10 MB." } };
     const bytes = new Uint8Array(await file.arrayBuffer());
     const type = detectCvType(bytes);
     if (!type) return { errors: { cv: "Upload a PDF or Word (.docx) file." } };
+    const scan = await scanBytes(bytes);
+    if (scan.status === "infected") return { errors: { cv: "This file was rejected by the virus scanner." } };
+    if (scan.status === "error") return { errors: { cv: "The file could not be checked for viruses. Please try again in a moment." } };
+    cvScan = scan;
     cv = { bytes, ...type, name: `cv-${parsed.data.last_name.replace(/[^A-Za-z0-9]/g, "").slice(0, 40) || "applicant"}.${type.ext}` };
   }
 
@@ -71,6 +77,7 @@ export async function submitApplicationAction(agencySlug: string, jobSlug: strin
         if (!up.error) {
           await admin.from("document_versions").insert({
             agency_id: opening.agency_id, document_id: doc.id, version: 1, storage_path: path, file_name: cv.name, mime_type: cv.mime, size_bytes: cv.bytes.length,
+            scan_status: cvScan.status === "clean" ? "clean" : "not_scanned", scan_engine: cvScan.status === "clean" ? cvScan.engine : null,
           });
           await admin.from("application_documents").insert({ agency_id: opening.agency_id, application_id: app.id, document_id: doc.id, kind: "resume" });
         }

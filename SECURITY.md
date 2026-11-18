@@ -35,7 +35,8 @@ authority) and database guard triggers.
 | Open redirects | `safeNextPath()` allows same-origin relative paths only |
 | HTTP headers | CSP (per-request nonce), HSTS, `X-Frame-Options: DENY`, `frame-ancestors 'none'`, `nosniff`, strict referrer policy, Permissions-Policy, COOP; `X-Powered-By` removed; portal responses `Cache-Control: private, no-store` |
 | Files | Private buckets; path `{agency}/{document}/…`; storage policies reuse the document read/upload rules; type detected from file content (PDF/JPEG/PNG/WebP only — HTML/SVG/executables rejected even if renamed), 10 MB limit; versions immutable; a new version re-opens verification |
-| MFA | Supabase TOTP for every user; once enrolled, all portals require an aal2 session (`requireUser`); `ENFORCE_STAFF_MFA` makes enrolment mandatory for staff; verification attempts rate limited |
+| MFA | Supabase TOTP for every user; once enrolled, all portals require an aal2 session; agencies can require MFA for all staff (Agency settings) and `ENFORCE_STAFF_MFA` does so platform-wide. **Enforced in the database**: `app.has_permission` (every staff policy and RPC) returns false for an aal1 session when the user has a verified factor or the agency requires it, so a stolen password-only token cannot use the Data API. Enabling the requirement without your own factor is refused (no self-lockout). Verification attempts rate limited |
+| Malware | Every upload (portal and careers site) is scanned with ClamAV when `CLAMAV_HOST` is set; infected files are rejected and logged, scanner errors refuse the upload; the scan result is stored per version and shown to verifiers |
 | Background jobs | `/api/cron/*` require `CRON_SECRET` (≥ 16 chars, constant-time comparison); queue/automation functions are executable by the service role only (tested) |
 | SECURITY DEFINER | Guards never use `current_user` or `is_privileged()` inside definer functions (always the owner there); a test scans `pg_proc` for both |
 | AI assistant | Read-only tools filtered by the user's permissions and executed with the user's RLS session; tool output treated as data; no write tools; rate limited (30/h) |
@@ -52,10 +53,8 @@ published jobs; CSP and security headers are present; sign-out rejects cross-ori
 
 ## Known gaps / pending
 
-- MFA is enforced in the application layer (aal2 check), not yet in RLS policies; a stolen aal1 session token could
-  still call the Data API directly. Adding `auth.jwt()->>'aal' = 'aal2'` to staff policies is recommended once all
-  staff are enrolled.
-- Malware scanning for uploads is not implemented (needs an external scanner, e.g. a storage webhook to ClamAV).
+- Malware scanning needs a ClamAV (clamd) service you host; without it uploads are type-checked only and marked "not scanned".
+- MFA enforcement in the database covers staff permissions; client users and workers are protected by the application-level aal2 check once they enrol.
 - `style-src 'unsafe-inline'` is allowed because Radix UI sets inline style attributes; scripts remain nonce-only.
 - Rate limiting fails open if `SUPABASE_SERVICE_ROLE_KEY` is not configured (Supabase Auth limits still apply).
 - An external penetration test is required before commercial launch.
