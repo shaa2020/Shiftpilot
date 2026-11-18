@@ -129,7 +129,7 @@ async function Positions({ agencyId, industries, canWrite }: { agencyId: string;
           <CardContent>
             <ServerForm action={addPositionAction} submitLabel="Add position" resetOnSuccess>
               <Field name="industry_id" label="Industry" required><NativeSelect name="industry_id">{industries.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}</NativeSelect></Field>
-              <Field name="category_id" label="Category"><NativeSelect name="category_id" defaultValue=""><option value="">None</option>{industries.flatMap((i) => i.job_categories.filter((c) => c.status === "active").map((c) => <option key={c.id} value={c.id}>{i.name} › {c.name}</option>))}</NativeSelect></Field>
+              <Field name="category_id" label="Category"><NativeSelect name="category_id" defaultValue=""><option value="">None</option>{industries.flatMap((i) => i.job_categories.filter((c) => c.status === "active").map((c) => <option key={c.id} value={c.id}>{`${i.name} › ${c.name}`}</option>))}</NativeSelect></Field>
               <Field name="name" label="Position name" required><Input name="name" /></Field>
               <Field name="description" label="Description"><Textarea name="description" rows={2} /></Field>
               <Field name="default_dress_code" label="Default dress code"><Input name="default_dress_code" /></Field>

@@ -63,7 +63,9 @@ export async function confirmAction(page: Page, trigger: Locator, opts: { reason
   await trigger.click();
   const dialog = page.getByRole("alertdialog");
   await expect(dialog).toBeVisible();
-  if (opts.reason !== undefined) await dialog.locator("#confirm-reason").fill(opts.reason);
+  const reasonBox = dialog.locator("#confirm-reason");
+  if (opts.reason !== undefined) await reasonBox.fill(opts.reason);
+  else if (await reasonBox.count()) await reasonBox.fill("Automated test entry");
   await dialog.getByRole("button").last().click();
   const toast = page.locator("[data-sonner-toast]").last();
   await toast.waitFor({ timeout: 20_000 });
@@ -92,3 +94,10 @@ export function amsterdamNow(offsetDays = 0) {
 }
 export const hhmm = (h: number) => `${String(((h % 24) + 24) % 24).padStart(2, "0")}:00`;
 export const unique = (prefix: string) => `${prefix} ${Date.now().toString(36).slice(-5)}`;
+
+/** Select the first option that has a value (skips "Choose…" placeholders). */
+export async function selectFirst(select: import("@playwright/test").Locator) {
+  const values = await select.locator("option").evaluateAll((os) => os.filter((o) => !(o as HTMLOptionElement).disabled && (o as HTMLOptionElement).value).map((o) => (o as HTMLOptionElement).value));
+  if (!values.length) throw new Error("Select has no choosable options");
+  await select.selectOption(values[0]);
+}

@@ -47,7 +47,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
   const positionFields = (
     <div className="grid gap-4 sm:grid-cols-2">
       <Field name="industry_id" label="Industry"><NativeSelect name="industry_id" defaultValue={p.industry_id}>{(industries.data ?? []).map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}</NativeSelect></Field>
-      <Field name="category_id" label="Category"><NativeSelect name="category_id" defaultValue={p.category_id ?? ""}><option value="">None</option>{(industries.data ?? []).flatMap((i) => i.job_categories.filter((c) => c.status === "active").map((c) => <option key={c.id} value={c.id}>{i.name} › {c.name}</option>))}</NativeSelect></Field>
+      <Field name="category_id" label="Category"><NativeSelect name="category_id" defaultValue={p.category_id ?? ""}><option value="">None</option>{(industries.data ?? []).flatMap((i) => i.job_categories.filter((c) => c.status === "active").map((c) => <option key={c.id} value={c.id}>{`${i.name} › ${c.name}`}</option>))}</NativeSelect></Field>
       <Field name="name" label="Name" required><Input name="name" defaultValue={p.name} /></Field>
       <Field name="default_dress_code" label="Default dress code"><Input name="default_dress_code" defaultValue={p.default_dress_code ?? ""} /></Field>
       <Field name="description" label="Description" className="sm:col-span-2"><Textarea name="description" rows={3} defaultValue={p.description ?? ""} /></Field>
