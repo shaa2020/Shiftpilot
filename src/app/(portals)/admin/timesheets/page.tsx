@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { requireStaff } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { formatDate, formatTime } from "@/lib/time";
+import { addDays, formatDate, formatTime, localDate } from "@/lib/time";
 import { hoursLabel } from "@/lib/data/worker";
 import { EmptyState, PageHeader } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
@@ -49,7 +50,11 @@ export default async function AdminTimesheetsPage({ searchParams }: { searchPara
   );
   return (
     <>
-      <PageHeader title="Timesheets" description={`Client approval first, then agency approval. ${corrections ? `${corrections} correction request(s) pending.` : ""}`} />
+      <PageHeader
+        title="Timesheets"
+        description={`Client approval first, then agency approval. ${corrections ? `${corrections} correction request(s) pending.` : ""}`}
+        actions={<Button asChild variant="secondary"><a href={`/api/exports/timesheets?from=${addDays(localDate(new Date()), -31)}&to=${localDate(new Date())}`} download><Download /> CSV (last 31 days)</a></Button>}
+      />
       <SectionTabs tabs={Object.entries(VIEWS).map(([k, l]) => ({ key: k, label: l, href: `?view=${k}` }))} active={view} />
       <Card className="overflow-hidden">
         {!data?.length ? <EmptyState icon={ClipboardCheck} title="Nothing here" className="m-5" /> : canApprove ? (

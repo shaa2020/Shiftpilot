@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireStaff } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { loadInvoiceForPdf } from "@/lib/finance/load";
+import { loadInvoiceBranding, loadInvoiceForPdf } from "@/lib/finance/load";
 import { renderInvoicePdf, money } from "@/lib/finance/invoice-pdf";
 import { escapeHtml, sendEmail } from "@/lib/integrations/email";
 import { dbErrorMessage, formObject, zodErrors, type ActionState } from "@/lib/actions/state";
@@ -92,7 +92,7 @@ export async function emailInvoiceAction(_p: ActionState, fd: FormData): Promise
   if (!inv) return { ok: false, message: "Only issued invoices can be sent." };
   const to = String(fd.get("reason") ?? "").trim() || inv.client_billing_email;
   if (!to || !z.string().email().safeParse(to).success) return { ok: false, message: "Enter a valid billing email address." };
-  const pdf = await renderInvoicePdf(inv);
+  const pdf = await renderInvoicePdf(inv, await loadInvoiceBranding(inv.agency_id));
   const label = inv.kind === "credit_note" ? "Credit note" : "Invoice";
   const res = await sendEmail({
     to,

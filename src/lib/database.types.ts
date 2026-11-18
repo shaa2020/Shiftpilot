@@ -52,6 +52,50 @@ export type Database = {
         };
         Relationships: [];
       };
+      agency_branding: {
+        Row: {
+          agency_id: string;
+          brand_color: string | null;
+          logo_data: string | null;
+          logo_mime: string | null;
+          logo_updated_at: string | null;
+          worker_welcome: string | null;
+          client_welcome: string | null;
+          invoice_footer: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          agency_id: string;
+          brand_color?: string | null;
+          logo_data?: string | null;
+          logo_mime?: string | null;
+          logo_updated_at?: string | null;
+          worker_welcome?: string | null;
+          client_welcome?: string | null;
+          invoice_footer?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          agency_id?: string;
+          brand_color?: string | null;
+          logo_data?: string | null;
+          logo_mime?: string | null;
+          logo_updated_at?: string | null;
+          worker_welcome?: string | null;
+          client_welcome?: string | null;
+          invoice_footer?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+            {
+              foreignKeyName: "agency_branding_agency_id_fkey";
+              columns: ["agency_id"];
+              isOneToOne: true;
+              referencedRelation: "agencies";
+              referencedColumns: ["id"];
+            },
+          ];
+      };
       agency_counters: {
         Row: {
           agency_id: string;
@@ -166,6 +210,63 @@ export type Database = {
               columns: ["agency_id"];
               isOneToOne: true;
               referencedRelation: "agencies";
+              referencedColumns: ["id"];
+            },
+          ];
+      };
+      announcements: {
+        Row: {
+          id: string;
+          agency_id: string;
+          title: string;
+          body: string;
+          audience: string;
+          pinned: boolean;
+          published_at: string;
+          expires_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          title: string;
+          body: string;
+          audience: string;
+          pinned?: boolean;
+          published_at?: string;
+          expires_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          title?: string;
+          body?: string;
+          audience?: string;
+          pinned?: boolean;
+          published_at?: string;
+          expires_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+            {
+              foreignKeyName: "announcements_agency_id_fkey";
+              columns: ["agency_id"];
+              isOneToOne: false;
+              referencedRelation: "agencies";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "announcements_created_by_fkey";
+              columns: ["created_by"];
+              isOneToOne: false;
+              referencedRelation: "profiles";
               referencedColumns: ["id"];
             },
           ];
@@ -848,6 +949,35 @@ export type Database = {
             },
           ];
       };
+      calendar_feeds: {
+        Row: {
+          user_id: string;
+          token_hash: string;
+          created_at: string;
+          last_used_at: string | null;
+        };
+        Insert: {
+          user_id: string;
+          token_hash: string;
+          created_at?: string;
+          last_used_at?: string | null;
+        };
+        Update: {
+          user_id?: string;
+          token_hash?: string;
+          created_at?: string;
+          last_used_at?: string | null;
+        };
+        Relationships: [
+            {
+              foreignKeyName: "calendar_feeds_user_id_fkey";
+              columns: ["user_id"];
+              isOneToOne: true;
+              referencedRelation: "profiles";
+              referencedColumns: ["id"];
+            },
+          ];
+      };
       cao_configurations: {
         Row: {
           id: string;
@@ -1459,6 +1589,71 @@ export type Database = {
             },
           ];
       };
+      client_worker_preferences: {
+        Row: {
+          id: string;
+          agency_id: string;
+          client_id: string;
+          worker_id: string;
+          kind: string;
+          reason: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          client_id: string;
+          worker_id: string;
+          kind: string;
+          reason?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          client_id?: string;
+          worker_id?: string;
+          kind?: string;
+          reason?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+            {
+              foreignKeyName: "client_worker_preferences_agency_id_fkey";
+              columns: ["agency_id"];
+              isOneToOne: false;
+              referencedRelation: "agencies";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "client_worker_preferences_client_id_fkey";
+              columns: ["client_id"];
+              isOneToOne: false;
+              referencedRelation: "clients";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "client_worker_preferences_created_by_fkey";
+              columns: ["created_by"];
+              isOneToOne: false;
+              referencedRelation: "profiles";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "client_worker_preferences_worker_id_fkey";
+              columns: ["worker_id"];
+              isOneToOne: false;
+              referencedRelation: "workers";
+              referencedColumns: ["id"];
+            },
+          ];
+      };
       clients: {
         Row: {
           id: string;
@@ -1913,6 +2108,8 @@ export type Database = {
           created_by: string | null;
           created_at: string;
           updated_at: string;
+          worker_id: string | null;
+          client_id: string | null;
         };
         Insert: {
           id?: string;
@@ -1923,6 +2120,8 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
+          worker_id?: string | null;
+          client_id?: string | null;
         };
         Update: {
           id?: string;
@@ -1933,6 +2132,8 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
+          worker_id?: string | null;
+          client_id?: string | null;
         };
         Relationships: [
             {
@@ -1943,10 +2144,24 @@ export type Database = {
               referencedColumns: ["id"];
             },
             {
+              foreignKeyName: "conversations_client_id_fkey";
+              columns: ["client_id"];
+              isOneToOne: false;
+              referencedRelation: "clients";
+              referencedColumns: ["id"];
+            },
+            {
               foreignKeyName: "conversations_created_by_fkey";
               columns: ["created_by"];
               isOneToOne: false;
               referencedRelation: "profiles";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "conversations_worker_id_fkey";
+              columns: ["worker_id"];
+              isOneToOne: false;
+              referencedRelation: "workers";
               referencedColumns: ["id"];
             },
           ];
@@ -7468,6 +7683,81 @@ export type Database = {
             },
           ];
       };
+      worker_ratings: {
+        Row: {
+          id: string;
+          agency_id: string;
+          assignment_id: string;
+          client_id: string;
+          worker_id: string;
+          rating: number;
+          comment: string | null;
+          rated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          assignment_id: string;
+          client_id: string;
+          worker_id: string;
+          rating: number;
+          comment?: string | null;
+          rated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          assignment_id?: string;
+          client_id?: string;
+          worker_id?: string;
+          rating?: number;
+          comment?: string | null;
+          rated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+            {
+              foreignKeyName: "worker_ratings_agency_id_fkey";
+              columns: ["agency_id"];
+              isOneToOne: false;
+              referencedRelation: "agencies";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "worker_ratings_assignment_id_fkey";
+              columns: ["assignment_id"];
+              isOneToOne: true;
+              referencedRelation: "shift_assignments";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "worker_ratings_client_id_fkey";
+              columns: ["client_id"];
+              isOneToOne: false;
+              referencedRelation: "clients";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "worker_ratings_rated_by_fkey";
+              columns: ["rated_by"];
+              isOneToOne: false;
+              referencedRelation: "profiles";
+              referencedColumns: ["id"];
+            },
+            {
+              foreignKeyName: "worker_ratings_worker_id_fkey";
+              columns: ["worker_id"];
+              isOneToOne: false;
+              referencedRelation: "workers";
+              referencedColumns: ["id"];
+            },
+          ];
+      };
       worker_skills: {
         Row: {
           id: string;
@@ -7693,18 +7983,22 @@ export type Database = {
       assign_worker: { Args: { p_shift_position_id: string; p_worker_id: string; p_override_reason?: string }; Returns: string };
       attendance_alerts: { Args: { p_agency_id: string }; Returns: { assignment_id: string; shift_id: string; worker_id: string; worker_name: string; shift_title: string; client_name: string; starts_at: string; alert: string; minutes_late: number }[] };
       bootstrap_agency: { Args: { p_name: string; p_slug: string; p_owner_user_id: string }; Returns: string };
+      calendar_feed_events: { Args: { p_token_hash: string }; Returns: { assignment_id: string; status: string; starts_at: string; ends_at: string; title: string; position_name: string; client_name: string; location_name: string; location_address: string; instructions: string; updated_at: string }[] };
       cancel_assignment: { Args: { p_assignment_id: string; p_reason: string }; Returns: undefined };
       claim_automation_jobs: { Args: { p_worker: string; p_limit?: number }; Returns: Database["public"]["Tables"]["automation_jobs"]["Row"][] };
       claim_notification_deliveries: { Args: { p_limit?: number }; Returns: Database["public"]["Tables"]["notification_deliveries"]["Row"][] };
       client_agency_name: { Args: { p_client_id: string }; Returns: string };
       client_on_duty: { Args: { p_client_id: string }; Returns: { shift_id: string; shift_title: string; location_name: string; worker_display_name: string; checked_in_at: string }[] };
+      client_recent_assignments: { Args: { p_client_id: string }; Returns: { assignment_id: string; worker_id: string; display_name: string; shift_title: string; location_name: string; starts_at: string; rating: number; comment: string }[] };
       client_review_timesheet: { Args: { p_timesheet_id: string; p_approve: boolean; p_comment?: string }; Returns: undefined };
       client_shift_staff: { Args: { p_shift_id: string }; Returns: { assignment_id: string; worker_display_name: string; position_name: string; status: Database["public"]["Enums"]["assignment_status"]; checked_in_at: string; checked_out_at: string; professional_summary: string; certificates: string[]; languages: string[] }[] };
       client_team: { Args: { p_client_id: string }; Returns: { membership_id: string; full_name: string; email: string; role: Database["public"]["Enums"]["client_member_role"]; status: Database["public"]["Enums"]["record_status"]; can_request_staff: boolean; can_approve_timesheets: boolean; can_view_finance: boolean; can_manage_users: boolean; is_self: boolean }[] };
       client_timesheet_workers: { Args: { p_timesheet_ids: string[] }; Returns: { timesheet_id: string; worker_display_name: string }[] };
+      client_worker_overview: { Args: { p_client_id: string }; Returns: { worker_id: string; display_name: string; shifts_worked: number; last_worked_at: string; average_rating: number; preference: string; preference_reason: string }[] };
       complete_notification_delivery: { Args: { p_id: string; p_status: string; p_provider?: string; p_message_id?: string; p_error?: string }; Returns: undefined };
       confirm_assignment: { Args: { p_assignment_id: string }; Returns: undefined };
       consume_rate_limit: { Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: boolean };
+      conversation_senders: { Args: { p_conversation_id: string }; Returns: { user_id: string; full_name: string; is_staff: boolean }[] };
       create_credit_note: { Args: { p_invoice_id: string; p_reason: string }; Returns: string };
       create_shifts: { Args: { p: Json }; Returns: string[] };
       decide_attendance_correction: { Args: { p_correction_id: string; p_approve: boolean; p_note: string }; Returns: undefined };
@@ -7720,16 +8014,19 @@ export type Database = {
       invite_workers: { Args: { p_shift_position_id: string; p_worker_ids: string[]; p_expires_at?: string; p_override_reason?: string }; Returns: Json };
       issue_invoice: { Args: { p_invoice_id: string }; Returns: string };
       log_audit_event: { Args: { p_agency_id: string; p_action: string; p_table: string; p_record_id: string; p_context?: Json }; Returns: undefined };
+      mark_conversation_read: { Args: { p_conversation_id: string }; Returns: undefined };
       mark_freelancer_invoice_paid: { Args: { p_invoice_id: string; p_paid_on: string; p_reference: string }; Returns: undefined };
       mark_no_show: { Args: { p_assignment_id: string }; Returns: undefined };
       my_agencies: { Args: never; Returns: { agency_id: string; name: string }[] };
       my_assignment_pay: { Args: { p_assignment_id: string }; Returns: { pay_basis: string; hourly_amount: number; fixed_fee: number; currency: string }[] };
       my_attendance_policy: { Args: { p_worker_id: string }; Returns: { location_verification_enabled: boolean; location_privacy_notice: string; timezone: string }[] };
+      my_conversations: { Args: { p_agency_id: string }; Returns: { id: string; subject: string; worker_id: string; client_id: string; party_name: string; updated_at: string; last_body: string; last_sender: string; last_at: string; unread: boolean; is_participant: boolean }[] };
       my_mfa_requirement: { Args: { p_agency_id: string }; Returns: string };
       my_permissions: { Args: { p_agency_id: string }; Returns: string[] };
       my_uninvoiced_timesheets: { Args: { p_worker_id: string }; Returns: { timesheet_id: string; scheduled_start: string; shift_title: string; worked_minutes: number; hourly_amount: number; fixed_fee: number; amount: number }[] };
       public_job_openings: { Args: { p_agency_slug?: string; p_job_slug?: string }; Returns: { id: string; agency_id: string; agency_slug: string; agency_name: string; title: string; slug: string; location_city: string; description: string; requirements_text: string; hours_indication: string; pay_indication: string; engagement_types: Database["public"]["Enums"]["engagement_type"][]; published_at: string; closes_at: string }[] };
       purge_rate_limits: { Args: never; Returns: number };
+      rate_assignment: { Args: { p_assignment_id: string; p_rating: number; p_comment?: string }; Returns: undefined };
       record_attendance: { Args: { p_assignment_id: string; p_event_type: string; p_idempotency_key: string; p_device_time?: string; p_offline?: boolean; p_latitude?: number; p_longitude?: number; p_accuracy_m?: number }; Returns: Json };
       record_invoice_sent: { Args: { p_invoice_id: string; p_sent_to: string }; Returns: undefined };
       register_push_subscription: { Args: { p_endpoint: string; p_p256dh: string; p_auth: string; p_user_agent?: string }; Returns: undefined };
@@ -7742,7 +8039,10 @@ export type Database = {
       respond_to_shift_invitation: { Args: { p_invitation_id: string; p_accept: boolean; p_reason?: string }; Returns: string };
       review_freelancer_invoice: { Args: { p_invoice_id: string; p_approve: boolean; p_note: string }; Returns: undefined };
       run_scheduled_automations: { Args: never; Returns: Json };
+      send_message: { Args: { p_conversation_id: string; p_body: string; p_internal?: boolean }; Returns: string };
+      set_worker_preference: { Args: { p_client_id: string; p_worker_id: string; p_kind: string; p_reason?: string }; Returns: undefined };
       staff_record_attendance: { Args: { p_assignment_id: string; p_event_type: string; p_occurred_at: string; p_note: string }; Returns: string };
+      start_conversation: { Args: { p_agency_id: string; p_subject: string; p_body: string; p_worker_id?: string; p_client_id?: string }; Returns: string };
       submit_freelancer_invoice: { Args: { p_worker_id: string; p_supplier_invoice_number: string; p_invoice_date: string; p_timesheet_ids: string[]; p_vat_rate: number; p_payee_iban: string; p_payee_name: string }; Returns: string };
       timesheet_billing_preview: { Args: { p_timesheet_id: string }; Returns: { category: string; minutes: number; hourly_rate: number }[] };
       verify_document: { Args: { p_document_id: string; p_approve: boolean; p_expires_on?: string; p_reason?: string }; Returns: undefined };

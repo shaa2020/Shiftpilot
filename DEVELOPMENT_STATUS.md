@@ -48,6 +48,14 @@ Invoice generation from approved timesheets (weekend/night/holiday classificatio
 - Opt-in geocoding (PDOK or Google) so travel-distance matching gets coordinates.
 - Demo seed (`npm run seed:demo`) and signed-in E2E tests with a CI job on a local Supabase stack.
 
+### Engagement & customisation ✅ (migration 0028)
+- Branding per agency: logo, brand colour (applied to all three portals, light and dark), welcome messages for workers and clients, invoice footer; logo and colour also on invoice PDFs.
+- Messaging: agency ↔ worker and agency ↔ client threads with unread badges, notifications, internal staff notes and auto-refresh.
+- Announcements: agency posts to workers, clients, staff or everyone, with pinning and an end date; shown on home screens and notified.
+- Clients rate finished shifts (1–5 stars) and mark workers preferred or blocked; matching excludes blocked and ranks preferred and well-rated workers higher. Staff see feedback on the worker record; workers see their own ratings.
+- Workers subscribe to their shifts in Google/Apple/Outlook calendars via a private ICS link.
+- CSV exports of workers, shifts and timesheets.
+
 ## Launch gates (not done — cannot be done from the build environment)
 
 | Gate | Why it matters |
@@ -74,14 +82,14 @@ Invoice generation from approved timesheets (weekend/night/holiday classificatio
 ## Tests (last local run, 2026-11-18)
 | Suite | Result |
 | --- | --- |
-| Unit (Vitest) | 69 / 69 passed (21 files) |
-| Database (incl. MFA enforcement) | 103 / 103 passed (8 files) |
-| Signed-in E2E | written, not yet run (CI job `e2e-supabase`) |
-| E2E smoke (Playwright, production build, desktop + mobile) | 128 / 128 passed |
+| Unit (Vitest) | 77 / 77 passed (22 files) |
+| Database (incl. MFA enforcement and engagement) | 115 / 115 passed (10 files) |
+| Signed-in E2E against a local Supabase stack | 46 / 46 passed |
+| E2E smoke (desktop + mobile) | 126 / 128 against a live stack; the 2 others check the "database unreachable" fallback and only apply without a database |
 | Lint, typecheck, production build | passed |
 
 ## Deployment status
-Not deployed. See DEPLOYMENT.md for the step-by-step launch checklist.
+Deployed on Vercel (region dub1) against the agency's Supabase project. Remaining launch gates are listed above.
 
 ## Next exact task
 Create the EU Supabase project and Vercel project, set the environment variables from ENVIRONMENT.md, run `supabase db push`, bootstrap the first agency (`scripts/bootstrap-agency.mjs`), then run the signed-in end-to-end checklist in TESTING.md § Manual acceptance.

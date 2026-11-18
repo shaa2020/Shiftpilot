@@ -8,6 +8,7 @@ import { EmptyState, PageHeader } from "@/components/ui/feedback";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { SectionTabs } from "@/components/ui/detail";
+import { CalendarCard } from "./calendar-card";
 
 export const metadata: Metadata = { title: "My schedule" };
 
@@ -20,10 +21,11 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
   q = view === "history"
     ? q.or(`ends_at.lt.${now},status.in.(cancelled,declined,replaced,no_show,completed)`).order("starts_at", { ascending: false }).limit(100)
     : q.gte("ends_at", now).in("status", ["accepted", "confirmed", "checked_in", "replacement_requested"]).order("starts_at");
-  const { data } = await q;
+  const [{ data }, { data: feed }] = await Promise.all([q, supabase.from("calendar_feeds").select("last_used_at").eq("user_id", ctx.user.id).maybeSingle()]);
   return (
     <>
       <PageHeader title="My schedule" />
+      <CalendarCard active={!!feed} lastUsed={feed?.last_used_at ?? null} />
       <SectionTabs tabs={[{ key: "upcoming", label: "Upcoming", href: "?view=upcoming" }, { key: "history", label: "History", href: "?view=history" }]} active={view === "history" ? "history" : "upcoming"} />
       {!data?.length ? <EmptyState icon={CalendarDays} title={view === "history" ? "No past shifts" : "No upcoming shifts"} /> : (
         <ul className="space-y-2">

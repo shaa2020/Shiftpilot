@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { brandCss } from "@/lib/branding-css";
 import { BrandMark } from "./brand";
 import { SidebarNav, MobileNav, BottomNav } from "./sidebar-nav";
 import { UserMenu } from "./user-menu";
@@ -12,31 +13,42 @@ export interface AppShellProps {
   nav: NavSection[];
   user: { email: string; fullName: string | null };
   canSwitchPortal: boolean;
+  /** Agency branding: colour, logo and the name shown next to it. */
+  brand?: { color: string | null; logoUrl: string | null; name: string | null };
+  /** Unread message count for the nav badge. */
+  badges?: Record<string, number>;
   children: React.ReactNode;
 }
 
 /** Shared responsive shell for all authenticated portals. */
-export function AppShell({ portalLabel, contextLabel, nav, user, canSwitchPortal, children }: AppShellProps) {
+export function AppShell({ portalLabel, contextLabel, nav, user, canSwitchPortal, brand, badges, children }: AppShellProps) {
+  const css = brandCss(brand?.color);
   return (
     <div className="flex min-h-dvh">
+      {css && <style>{css}</style>}
       <aside className="sidebar-surface sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-white/5 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.4)] lg:flex">
         <div className="flex h-16 items-center gap-2 px-4">
-          <Link href="/portal" className="flex items-center gap-2 text-white">
-            <BrandMark />
-            <span className="font-semibold tracking-tight">ShiftPilot</span>
+          <Link href="/portal" className="flex min-w-0 items-center gap-2 text-white">
+            {brand?.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={brand.logoUrl} alt="" className="size-8 shrink-0 rounded-md bg-white object-contain p-0.5" />
+            ) : (
+              <BrandMark />
+            )}
+            <span className="truncate font-semibold tracking-tight">{brand?.logoUrl && brand.name ? brand.name : "ShiftPilot"}</span>
           </Link>
           <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-sky-200">
             {portalLabel}
           </span>
         </div>
         {contextLabel && <p className="truncate px-4 pb-2 text-xs text-sidebar-foreground/80">{contextLabel}</p>}
-        <SidebarNav sections={nav} />
+        <SidebarNav sections={nav} badges={badges} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="pt-safe sticky top-0 z-30 border-b border-border/60 bg-surface/70 backdrop-blur-xl backdrop-saturate-150">
           <div className="flex h-14 items-center gap-3 px-4 lg:h-16 lg:px-6">
-          <MobileNav sections={nav} portalLabel={portalLabel} contextLabel={contextLabel} />
+          <MobileNav sections={nav} portalLabel={portalLabel} contextLabel={contextLabel} badges={badges} />
           <div className="min-w-0 flex-1 truncate text-sm text-muted-foreground lg:hidden">{contextLabel ?? portalLabel}</div>
           <div className="ml-auto flex items-center gap-1.5">
             <InstallApp className="h-8 px-2.5 text-xs" label="Install" />
@@ -48,7 +60,7 @@ export function AppShell({ portalLabel, contextLabel, nav, user, canSwitchPortal
         <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-6 sm:px-6 lg:pb-10 lg:pt-8">
           {children}
         </main>
-        <BottomNav sections={nav} portalLabel={portalLabel} contextLabel={contextLabel} />
+        <BottomNav sections={nav} portalLabel={portalLabel} contextLabel={contextLabel} badges={badges} />
       </div>
     </div>
   );

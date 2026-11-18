@@ -21,7 +21,17 @@ export interface PdfInvoice {
   items: { description: string; quantity: number; unit: string; unit_price: number; vat_rate: number; line_subtotal: number }[];
 }
 
+export interface PdfBranding {
+  color?: string | null;
+  logo?: { bytes: Uint8Array; mime: "image/png" | "image/jpeg" } | null;
+  footer?: string | null;
+}
+
 const NAVY = rgb(0.063, 0.141, 0.227);
+function hexColor(hex: string | null | undefined) {
+  if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) return null;
+  return rgb(parseInt(hex.slice(1, 3), 16) / 255, parseInt(hex.slice(3, 5), 16) / 255, parseInt(hex.slice(5, 7), 16) / 255);
+}
 const MUTED = rgb(0.392, 0.455, 0.545);
 
 export function money(n: number, currency = "EUR") {
@@ -34,7 +44,7 @@ function safe(s: string) {
 }
 
 /** Generates an invoice/credit-note PDF from an issued invoice's immutable data. */
-export async function renderInvoicePdf(inv: PdfInvoice): Promise<Uint8Array> {
+export async function renderInvoicePdf(inv: PdfInvoice, brand: PdfBranding = {}): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   doc.setTitle(`${inv.kind === "credit_note" ? "Credit note" : "Invoice"} ${inv.invoice_number}`);
   doc.setProducer("ShiftPilot");
@@ -49,8 +59,22 @@ export async function renderInvoicePdf(inv: PdfInvoice): Promise<Uint8Array> {
 
   const ag = inv.billing_snapshot.agency;
   const cl = inv.billing_snapshot.client;
-  text(page, ag.name, 50, y, bold, 16, NAVY);
-  [ag.address, [ag.postal_code, ag.city].filter(Boolean).join(" "), ag.email, ag.phone].filter(Boolean).forEach((l, i) => text(page, String(l), 50, y - 18 - i * 12, font, 9, MUTED));
+  const accent = hexColor(brand.color) ?? NAVY;
+  page.drawRectangle({ x: 0, y: 841.89 - 6, width: W, height: 6, color: accent });
+  // Logo (if any) to the left of the agency name, scaled into a 44pt box.
+  let nameX = 50;
+  if (brand.logo) {
+    try {
+      const img = brand.logo.mime === "image/png" ? await doc.embedPng(brand.logo.bytes) : await doc.embedJpg(brand.logo.bytes);
+      const scale = Math.min(44 / img.width, 44 / img.height);
+      page.drawImage(img, { x: 50, y: y + 14 - img.height * scale, width: img.width * scale, height: img.height * scale });
+      nameX = 50 + img.width * scale + 10;
+    } catch {
+      // An unreadable logo never blocks an invoice.
+    }
+  }
+  text(page, ag.name, nameX, y, bold, 16, accent);
+  [ag.address, [ag.postal_code, ag.city].filter(Boolean).join(" "), ag.email, ag.phone].filter(Boolean).forEach((l, i) => text(page, String(l), nameX, y - 18 - i * 12, font, 9, MUTED));
   right(page, inv.kind === "credit_note" ? "CREDIT NOTE" : "INVOICE", W - 50, y, bold, 18);
   right(page, inv.invoice_number, W - 50, y - 20, font, 11);
 
@@ -101,5 +125,18 @@ export async function renderInvoicePdf(inv: PdfInvoice): Promise<Uint8Array> {
   if (inv.kind === "invoice" && ag.iban) text(page, `Please pay ${money(inv.total, inv.currency)} by ${inv.due_date} to ${ag.iban} (${ag.name}), quoting ${inv.invoice_number}.`, 50, y, font, 9);
   if (inv.notes) text(page, inv.notes.slice(0, 120), 50, y - 14, font, 9, MUTED);
   text(page, [ag.vat_number ? `VAT ${ag.vat_number}` : null, ag.kvk_number ? `KvK ${ag.kvk_number}` : null].filter(Boolean).join(" · "), 50, 40, font, 8, MUTED);
+  if (brand.footer) {
+    const footer = brand.footer.replace(/\s+/g, " ").slice(0, 300);
+    // Wrap to the page width.
+    const words = footer.split(" ");
+    const lines: string[] = [];
+    let line = "";
+    for (const w of words) {
+      const next = line ? `${line} ${w}` : w;
+      if (font.widthOfTextAtSize(safe(next), 8) > W - 100 && line) { lines.push(line); line = w; } else line = next;
+    }
+    if (line) lines.push(line);
+    lines.slice(0, 3).forEach((l, i) => text(page, l, 50, 54 + (Math.min(lines.length, 3) - 1 - i) * 10, font, 8, MUTED));
+  }
   return doc.save();
 }

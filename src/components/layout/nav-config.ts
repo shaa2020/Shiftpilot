@@ -2,7 +2,7 @@ import type { Permission } from "@/lib/auth/permissions";
 
 export type NavIcon =
   | "dashboard" | "settings" | "users" | "shield" | "briefcase" | "calendar" | "clock" | "receipt" | "home" | "file" | "bell"
-  | "building" | "hardhat" | "target" | "megaphone" | "sliders";
+  | "building" | "hardhat" | "target" | "megaphone" | "sliders" | "chat";
 
 export interface NavItem {
   href: string;
@@ -35,6 +35,8 @@ export const ADMIN_NAV: NavSection[] = [
       { href: "/admin/schedule", label: "Schedule", icon: "calendar", anyOf: ["shifts.read"], tab: true },
       { href: "/admin/attendance", label: "Attendance", icon: "clock", anyOf: ["attendance.read"], short: "On site", tab: true },
       { href: "/admin/timesheets", label: "Timesheets", icon: "file", anyOf: ["timesheets.read"] },
+      { href: "/admin/messages", label: "Messages", icon: "chat", anyOf: ["shifts.read"] },
+      { href: "/admin/announcements", label: "Announcements", icon: "megaphone", anyOf: ["notifications.manage"] },
     ],
   },
   {
@@ -66,6 +68,7 @@ export const ADMIN_NAV: NavSection[] = [
     label: "Administration",
     items: [
       { href: "/admin/settings", label: "Agency settings", icon: "settings", anyOf: ["agency.settings.manage"] },
+      { href: "/admin/settings/branding", label: "Branding", icon: "sliders", anyOf: ["agency.settings.manage"] },
       { href: "/admin/configuration", label: "Configuration", icon: "sliders" },
       { href: "/admin/settings/team", label: "Team & access", icon: "users", anyOf: ["users.manage"] },
       { href: "/admin/settings/roles", label: "Roles & permissions", icon: "shield", anyOf: ["users.manage", "roles.manage"] },
@@ -84,6 +87,8 @@ export const CLIENT_NAV: NavSection[] = [
       { href: "/client/requests", label: "Staffing requests", icon: "bell", short: "Requests" },
       { href: "/client/shifts", label: "Shifts", icon: "calendar" },
       { href: "/client/timesheets", label: "Timesheets", icon: "clock", short: "Hours" },
+      { href: "/client/workers", label: "Workers & feedback", icon: "hardhat", short: "Workers" },
+      { href: "/client/messages", label: "Messages", icon: "chat" },
       { href: "/client/invoices", label: "Invoices", icon: "receipt" },
       { href: "/client/pricing", label: "Pricing", icon: "file" },
       { href: "/client/team", label: "Team", icon: "users" },
@@ -109,6 +114,7 @@ export const WORKER_NAV: NavSection[] = [
       { href: "/worker/offers", label: "Offers", icon: "bell" },
       { href: "/worker/schedule", label: "My schedule", icon: "calendar", short: "Schedule" },
       { href: "/worker/timesheets", label: "Timesheets", icon: "clock", short: "Hours" },
+      { href: "/worker/messages", label: "Messages", icon: "chat" },
       { href: "/worker/earnings", label: "Earnings", icon: "receipt" },
       { href: "/worker/documents", label: "Documents", icon: "file" },
       { href: "/worker/profile", label: "My profile", icon: "users" },

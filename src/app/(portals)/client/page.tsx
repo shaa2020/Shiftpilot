@@ -4,6 +4,8 @@ import { requireClient } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime, formatMoney } from "@/lib/time";
 import { PageHeader, StatCard, EmptyState } from "@/components/ui/feedback";
+import { getBranding } from "@/lib/branding";
+import { PortalFeed } from "@/components/engagement/portal-feed";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -30,9 +32,11 @@ export default async function ClientOverview() {
       : Promise.resolve({ data: null }),
   ]);
 
+  const brand = await getBranding(ctx.agencyId);
   return (
     <>
       <PageHeader title={`Welcome, ${ctx.user.fullName?.split(" ")[0] ?? ""}`.trim()} description={`Staffing overview for ${ctx.clientName}.`} />
+      <PortalFeed agencyId={ctx.agencyId} welcome={brand.clientWelcome} agencyName={brand.agencyName} />
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard label="Upcoming shifts" value={upcoming.data?.length ?? 0} icon={CalendarDays} tone="info" />
         <StatCard label="Open staffing requests" value={openRequests.count ?? 0} icon={Inbox} />

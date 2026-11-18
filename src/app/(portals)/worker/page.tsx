@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { AttendanceControls } from "@/components/worker/attendance-controls";
 import { directionsUrl } from "@/lib/maps";
+import { getBranding } from "@/lib/branding";
+import { PortalFeed } from "@/components/engagement/portal-feed";
 
 export const metadata: Metadata = { title: "Home" };
 
@@ -21,7 +23,7 @@ export default async function WorkerHome() {
   const now_ms = nowMs();
   const supabase = await createClient();
   const now = new Date().toISOString();
-  const [next, invitations, assigned, tasks, policy, hours] = await Promise.all([
+  const [next, invitations, assigned, tasks, policy, hours, brand] = await Promise.all([
     supabase
       .from("shift_assignments")
       .select("id, status, starts_at, ends_at, shifts(title, dress_code, client_locations(name, address_line1, postal_code, city, latitude, longitude)), break_records(id, ended_at)")
@@ -35,6 +37,7 @@ export default async function WorkerHome() {
     supabase.from("onboarding_tasks").select("id, title, status, is_required, staff_only").eq("worker_id", ctx.workerId).in("status", ["pending", "blocked"]).order("sort_order"),
     getAttendancePolicy(ctx.workerId),
     getWorkedMinutes(ctx.workerId),
+    getBranding(ctx.agencyId),
   ]);
   const nextShift = next.data?.[0];
   const loc = nextShift?.shifts?.client_locations;
@@ -45,6 +48,7 @@ export default async function WorkerHome() {
   return (
     <>
       <PageHeader title={`Hi ${ctx.user.fullName?.split(" ")[0] ?? "there"}`} />
+      <PortalFeed agencyId={ctx.agencyId} welcome={brand.workerWelcome} agencyName={brand.agencyName} />
       {ctx.status !== "active" && (
         <Alert tone="info" title="Your onboarding is in progress" className="mb-4">
           Complete your <Link href="/worker/profile" className="underline">profile tasks</Link>. You can receive shift offers once the agency has finished its checks.

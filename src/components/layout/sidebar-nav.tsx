@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  Bell, Briefcase, Ellipsis, Building2, CalendarDays, Clock, FileText, HardHat, Home, LayoutDashboard, Megaphone, Menu, Receipt, Settings, Shield, SlidersHorizontal, Target, Users,
+  Bell, Briefcase, Ellipsis, Building2, CalendarDays, Clock, FileText, HardHat, Home, LayoutDashboard, Megaphone, Menu, MessageSquare, Receipt, Settings, Shield, SlidersHorizontal, Target, Users,
   type LucideIcon,
 } from "lucide-react";
 import { Dialog, DialogTrigger, SheetContent } from "@/components/ui/dialog";
@@ -14,7 +14,7 @@ import type { NavIcon, NavSection } from "./nav-config";
 const ICONS: Record<NavIcon, LucideIcon> = {
   dashboard: LayoutDashboard, settings: Settings, users: Users, shield: Shield, briefcase: Briefcase,
   calendar: CalendarDays, clock: Clock, receipt: Receipt, home: Home, file: FileText, bell: Bell,
-  building: Building2, hardhat: HardHat, target: Target, megaphone: Megaphone, sliders: SlidersHorizontal,
+  building: Building2, hardhat: HardHat, target: Target, megaphone: Megaphone, sliders: SlidersHorizontal, chat: MessageSquare,
 };
 
 function isActive(pathname: string, href: string) {
@@ -22,7 +22,7 @@ function isActive(pathname: string, href: string) {
   return portalRoot ? pathname === href : pathname === href || pathname.startsWith(href + "/");
 }
 
-export function SidebarNav({ sections, onNavigate }: { sections: NavSection[]; onNavigate?: () => void }) {
+export function SidebarNav({ sections, onNavigate, badges }: { sections: NavSection[]; onNavigate?: () => void; badges?: Record<string, number> }) {
   const pathname = usePathname();
   // The most specific matching item wins (e.g. /admin/settings/team over /admin/settings).
   const all = sections.flatMap((s) => s.items);
@@ -49,11 +49,17 @@ export function SidebarNav({ sections, onNavigate }: { sections: NavSection[]; o
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-sidebar-foreground transition-all hover:bg-white/5 hover:text-white",
-                      active && "bg-gradient-to-r from-blue-600/90 to-sky-500/70 font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_6px_18px_-8px_rgba(59,130,246,0.9)]",
+                      active && "bg-gradient-to-r from-primary/95 to-primary/60 font-medium text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_6px_18px_-8px_var(--primary)]",
                     )}
                   >
                     <Icon className="size-4 shrink-0" aria-hidden />
                     {item.label}
+                    {!!badges?.[item.href] && (
+                      <span className="ml-auto rounded-full bg-primary px-1.5 text-[11px] font-semibold leading-5 text-primary-foreground">
+                        {badges[item.href]! > 99 ? "99+" : badges[item.href]}
+                        <span className="sr-only"> unread</span>
+                      </span>
+                    )}
                   </Link>
                 </li>
               );
@@ -65,7 +71,7 @@ export function SidebarNav({ sections, onNavigate }: { sections: NavSection[]; o
   );
 }
 
-export function MobileNav({ sections, portalLabel, contextLabel }: { sections: NavSection[]; portalLabel: string; contextLabel?: string }) {
+export function MobileNav({ sections, portalLabel, contextLabel, badges }: { sections: NavSection[]; portalLabel: string; contextLabel?: string; badges?: Record<string, number> }) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -79,14 +85,14 @@ export function MobileNav({ sections, portalLabel, contextLabel }: { sections: N
           <span className="ml-auto text-[10px] uppercase tracking-wider text-sidebar-foreground">{portalLabel}</span>
         </div>
         {contextLabel && <p className="truncate px-4 pb-2 text-xs text-sidebar-foreground/80">{contextLabel}</p>}
-        <SidebarNav sections={sections} onNavigate={() => setOpen(false)} />
+        <SidebarNav sections={sections} badges={badges} onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Dialog>
   );
 }
 
 /** App-style bottom tab bar on phones: the first four destinations plus "More". */
-export function BottomNav({ sections, portalLabel, contextLabel }: { sections: NavSection[]; portalLabel: string; contextLabel?: string }) {
+export function BottomNav({ sections, portalLabel, contextLabel, badges }: { sections: NavSection[]; portalLabel: string; contextLabel?: string; badges?: Record<string, number> }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const items = sections.flatMap((s) => s.items);
@@ -103,7 +109,10 @@ export function BottomNav({ sections, portalLabel, contextLabel }: { sections: N
           return (
             <li key={t.href}>
               <Link href={t.href} aria-current={active ? "page" : undefined} className={cn("flex flex-col items-center gap-0.5 px-1 py-2 text-[11px] font-medium text-muted-foreground transition-colors", active && "text-primary")}>
-                <span className={cn("grid h-7 w-12 place-items-center rounded-full transition-all", active && "bg-primary-soft shadow-[0_4px_12px_-6px_rgba(37,99,235,0.8)]")}><Icon className="size-5" aria-hidden /></span>
+                <span className={cn("relative grid h-7 w-12 place-items-center rounded-full transition-all", active && "bg-primary-soft shadow-[0_4px_12px_-6px_var(--primary)]")}>
+                  <Icon className="size-5" aria-hidden />
+                  {!!badges?.[t.href] && <span className="absolute right-1.5 top-0 size-2 rounded-full bg-danger ring-2 ring-surface" aria-label="unread" />}
+                </span>
                 <span className="max-w-full truncate">{t.short ?? t.label}</span>
               </Link>
             </li>
@@ -112,7 +121,10 @@ export function BottomNav({ sections, portalLabel, contextLabel }: { sections: N
         <li>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger className={cn("flex w-full flex-col items-center gap-0.5 px-1 py-2 text-[11px] font-medium text-muted-foreground", moreActive && "text-primary")}>
-              <span className={cn("grid h-7 w-12 place-items-center rounded-full", moreActive && "bg-primary-soft")}><Ellipsis className="size-5" aria-hidden /></span>
+              <span className={cn("relative grid h-7 w-12 place-items-center rounded-full", moreActive && "bg-primary-soft")}>
+                <Ellipsis className="size-5" aria-hidden />
+                {Object.entries(badges ?? {}).some(([h, n]) => n > 0 && !tabs.some((t) => t.href === h)) && <span className="absolute right-1.5 top-0 size-2 rounded-full bg-danger ring-2 ring-surface" aria-label="unread" />}
+              </span>
               More
             </DialogTrigger>
             <SheetContent title="All pages" side="right" className="sidebar-surface pt-safe">
@@ -122,7 +134,7 @@ export function BottomNav({ sections, portalLabel, contextLabel }: { sections: N
                 <span className="ml-auto text-[10px] uppercase tracking-wider text-sidebar-foreground">{portalLabel}</span>
               </div>
               {contextLabel && <p className="truncate px-4 pb-2 text-xs text-sidebar-foreground/80">{contextLabel}</p>}
-              <SidebarNav sections={sections} onNavigate={() => setOpen(false)} />
+              <SidebarNav sections={sections} badges={badges} onNavigate={() => setOpen(false)} />
             </SheetContent>
           </Dialog>
         </li>

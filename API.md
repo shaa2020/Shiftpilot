@@ -56,6 +56,9 @@ with human-readable messages that the UI can display.
 | `GET /api/cron/automations` | cron | Runs `run_scheduled_automations()` |
 | `GET /api/invoices/[id]/ubl` | as the PDF (RLS) | UBL 2.1 / Peppol BIS 3 e-invoice (credit notes as UBL CreditNote) for Exact Online, Moneybird, AFAS, Twinfield, Snelstart |
 | `GET /api/health` | public | Status and which integrations are configured (booleans only) |
+| `GET /api/branding/logo/[agency]` | agency participants (RLS) | Agency logo (PNG/JPEG), cached per version |
+| `GET /api/calendar/[token].ics` | holder of the secret link | Worker's own shifts as an ICS feed; only the token hash is stored; uses the anon key |
+| `GET /api/exports/[kind]?from&to` | `workers.read` / `shifts.read` / `timesheets.read` | CSV of workers, shifts or timesheets (no bank or identity numbers), formula-injection safe |
 
 ## D. RPC functions added in later phases
 
@@ -72,6 +75,10 @@ Documents/GDPR (0022): `verify_document`, `worker_document_checklist`, `decide_c
 `anonymise_application`, `anonymise_worker`, `my_agencies`, `apply_retention` (service role).
 Automation (0023): `register_push_subscription`; service role only: `complete_notification_delivery`,
 `delivery_context`, `run_scheduled_automations`.
+Engagement (0028): `start_conversation`, `send_message`, `mark_conversation_read`, `my_conversations` (invoker),
+`conversation_senders`, `rate_assignment`, `set_worker_preference`, `client_worker_overview`, `client_recent_assignments`,
+`calendar_feed_events` (anon, token hash). A client's blocked worker is ineligible for that client in
+`evaluate_eligibility`; preferred workers get +20 and the average client rating adjusts the score.
 MFA (0024): `my_mfa_requirement(agency)` returns `ok`, `verify` or `enrol`; `app.has_permission` requires aal2 when the user has a verified factor or the agency requires staff MFA.
 
 The operations assistant (`/admin/assistant`) has no API of its own: its tools are read-only queries executed with the

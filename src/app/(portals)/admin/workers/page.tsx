@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { HardHat, Plus } from "lucide-react";
+import { Download, HardHat, Plus } from "lucide-react";
 import { requireStaff } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, EmptyState } from "@/components/ui/feedback";
@@ -43,7 +43,12 @@ export default async function WorkersPage({ searchParams }: { searchParams: Prom
       <PageHeader
         title="Workers"
         description="Agency employees and independent freelancers."
-        actions={ctx.can("workers.write") && <Button asChild><Link href="/admin/workers/new"><Plus /> New worker</Link></Button>}
+        actions={
+          <div className="flex gap-2">
+            <Button asChild variant="secondary"><a href="/api/exports/workers" download><Download /> CSV</a></Button>
+            {ctx.can("workers.write") && <Button asChild><Link href="/admin/workers/new"><Plus /> New worker</Link></Button>}
+          </div>
+        }
       />
       <ListFilters
         q={q}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, Plus } from "lucide-react";
+import { CalendarDays, Download, Plus } from "lucide-react";
 import { requireStaff } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { addDays, formatDate, localDate, formatTime, zonedMidnight } from "@/lib/time";
@@ -46,6 +46,7 @@ export default async function ShiftsPage({ searchParams }: { searchParams: Promi
         description="All shifts with fill status. Open a shift to match and assign workers."
         actions={
           <div className="flex gap-2">
+            <Button asChild variant="secondary"><a href={`/api/exports/shifts?from=${from}&to=${to}`} download><Download /> CSV</a></Button>
             <Button asChild variant="secondary"><Link href="/admin/schedule"><CalendarDays /> Calendar</Link></Button>
             {ctx.can("shifts.write") && <Button asChild><Link href="/admin/shifts/new"><Plus /> New shift</Link></Button>}
           </div>

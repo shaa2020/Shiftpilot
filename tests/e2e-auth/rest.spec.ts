@@ -79,6 +79,7 @@ test("compliance: regulated-position review decided; rule created, activated, re
   // Mark a position as regulated so a review can be opened.
   await page.goto("/admin/configuration?tab=positions");
   await page.getByRole("link", { name: "Bediening" }).first().click();
+  await page.waitForURL(/\/admin\/configuration\/positions\/[0-9a-f-]{36}/);
   const regulated = page.locator('[name="is_regulated"]');
   if (ran(await regulated.count(), "regulated checkbox")) {
     await regulated.check();

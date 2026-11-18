@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import type { PdfInvoice } from "./invoice-pdf";
+import type { PdfBranding, PdfInvoice } from "./invoice-pdf";
 
 /** Loads an issued invoice as the current user (RLS decides visibility). */
 export async function loadInvoiceForPdf(id: string): Promise<(PdfInvoice & { agency_id: string; client_billing_email: string | null }) | null> {
@@ -19,5 +19,17 @@ export async function loadInvoiceForPdf(id: string): Promise<(PdfInvoice & { age
     period_start: inv.period_start, period_end: inv.period_end, po_number: inv.po_number, notes: inv.notes, currency: inv.currency,
     subtotal: Number(inv.subtotal), vat_total: Number(inv.vat_total), total: Number(inv.total), billing_snapshot: snap,
     items: [...inv.invoice_items].sort((a, b) => a.sort_order - b.sort_order).map((i) => ({ ...i, quantity: Number(i.quantity), unit_price: Number(i.unit_price), vat_rate: Number(i.vat_rate), line_subtotal: Number(i.line_subtotal ?? 0) })),
+  };
+}
+
+/** Agency branding for invoice PDFs (any agency participant may read it). */
+export async function loadInvoiceBranding(agencyId: string): Promise<PdfBranding> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("agency_branding").select("brand_color, logo_data, logo_mime, invoice_footer").eq("agency_id", agencyId).maybeSingle();
+  if (!data) return {};
+  return {
+    color: data.brand_color,
+    footer: data.invoice_footer,
+    logo: data.logo_data && (data.logo_mime === "image/png" || data.logo_mime === "image/jpeg") ? { bytes: Buffer.from(data.logo_data, "base64"), mime: data.logo_mime } : null,
   };
 }

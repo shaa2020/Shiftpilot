@@ -167,6 +167,7 @@ test("workers: create, verify, skills, certificate, availability, notes", async 
 });
 
 test("workers: employment contract, wage, onboarding and activation", async ({ page }) => {
+  test.setTimeout(90_000); // completes every onboarding task one by one
   await signIn(page, USERS.owner);
   await page.goto(`${workerUrl}?tab=pathway`);
   await submit(page, "Create draft", async (f) => {

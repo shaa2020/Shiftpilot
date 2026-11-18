@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Award, CalendarClock, ClipboardList, FileSignature, Languages, StickyNote, Wrench } from "lucide-react";
+import { ArrowLeft, Award, CalendarClock, ClipboardList, FileSignature, Languages, MessageSquare, StickyNote, Wrench } from "lucide-react";
 import { requireStaff, type StaffContext } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { formatDateTime, formatMoney, localDate } from "@/lib/time";
+import { formatDate, formatDateTime, formatMoney, localDate } from "@/lib/time";
 import { PageHeader, EmptyState } from "@/components/ui/feedback";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { StatusBadge, humanize } from "@/components/ui/status-badge";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { SectionTabs } from "@/components/ui/detail";
 import { Input, NativeSelect, Textarea } from "@/components/ui/input";
@@ -25,10 +26,11 @@ import {
   setOnboardingTaskAction, setWorkerStatusAction, updatePrivateDetailsAction, updateWorkerProfileAction, verifyCertificateAction,
 } from "../actions";
 import { staffUploadDocumentAction } from "../../documents/actions";
+import { clearPreferenceAction } from "../feedback-actions";
 
 export const metadata: Metadata = { title: "Worker" };
 
-const TABS = ["profile", "compliance", "documents", "skills", "availability", "onboarding", "pathway", "notes"] as const;
+const TABS = ["profile", "compliance", "documents", "skills", "availability", "onboarding", "pathway", "feedback", "notes"] as const;
 type Tab = (typeof TABS)[number];
 const DAYS = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const VERIFY: [string, string][] = [["not_submitted", "Not submitted"], ["pending", "Pending"], ["verified", "Verified"], ["rejected", "Rejected"], ["expired", "Expired"]];
@@ -62,6 +64,9 @@ export default async function WorkerDetailPage({ params, searchParams }: { param
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={worker.status} />
+            {worker.user_id && ctx.can("shifts.read") && (
+              <Button asChild variant="secondary" size="sm"><Link href={`/admin/messages?to=worker:${id}`}><MessageSquare /> Message</Link></Button>
+            )}
             {canWrite && transitions.map(([s, label]) => (
               <ConfirmAction
                 key={s}
@@ -116,6 +121,7 @@ export default async function WorkerDetailPage({ params, searchParams }: { param
       {tab === "availability" && <Availability workerId={id} canWrite={canWrite} />}
       {tab === "onboarding" && <Onboarding workerId={id} canWrite={canWrite} />}
       {tab === "pathway" && (worker.engagement_type === "employee" ? <EmployeePathway workerId={id} ctx={ctx} /> : <FreelancerPathway workerId={id} ctx={ctx} />)}
+      {tab === "feedback" && <Feedback workerId={id} canClear={ctx.can("clients.write")} />}
       {tab === "notes" && ctx.can("workers.notes.read") && <Notes workerId={id} />}
     </>
   );
@@ -639,5 +645,58 @@ async function WorkerDocuments({ workerId, ctx }: { workerId: string; ctx: Await
         </Table>
       )}
     </Card>
+  );
+}
+
+async function Feedback({ workerId, canClear }: { workerId: string; canClear: boolean }) {
+  const supabase = await createClient();
+  const [{ data: ratings }, { data: prefs }] = await Promise.all([
+    supabase.from("worker_ratings").select("id, rating, comment, created_at, clients(name)").eq("worker_id", workerId).order("created_at", { ascending: false }).limit(100),
+    supabase.from("client_worker_preferences").select("id, client_id, kind, reason, created_at, clients(name)").eq("worker_id", workerId).order("created_at", { ascending: false }),
+  ]);
+  const avg = ratings?.length ? ratings.reduce((n, r) => n + r.rating, 0) / ratings.length : null;
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Client ratings</CardTitle>
+          <CardDescription>{avg != null ? `Average ${avg.toFixed(1)} / 5 from ${ratings!.length} rating(s). Ratings add to the matching score.` : "No ratings yet."}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="divide-y divide-border">
+            {(ratings ?? []).map((r) => (
+              <li key={r.id} className="py-2 text-sm">
+                <p className="flex items-center gap-2"><span className="font-medium">{r.clients?.name}</span><span aria-label={`${r.rating} out of 5`} className="text-amber-500">{"★".repeat(r.rating)}<span className="text-border">{"★".repeat(5 - r.rating)}</span></span><span className="ml-auto text-xs text-muted-foreground">{formatDate(r.created_at)}</span></p>
+                {r.comment && <p className="text-muted-foreground">{r.comment}</p>}
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Client preferences</CardTitle>
+          <CardDescription>Blocked workers are never matched to that client; preferred workers rank higher.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!prefs?.length ? <p className="text-sm text-muted-foreground">No client has marked this worker.</p> : (
+            <ul className="divide-y divide-border">
+              {prefs.map((p) => (
+                <li key={p.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
+                  <span className="font-medium">{p.clients?.name}</span>
+                  <Badge tone={p.kind === "blocked" ? "danger" : "success"}>{p.kind === "blocked" ? "Blocked" : "Preferred"}</Badge>
+                  {p.reason && <span className="w-full text-muted-foreground">{p.reason}</span>}
+                  {canClear && (
+                    <span className="ml-auto">
+                      <ConfirmAction action={clearPreferenceAction} fields={{ client_id: p.client_id, worker_id: workerId }} title="Remove this client preference?" description="Only do this after agreeing it with the client." confirmLabel="Remove" variant="ghost">Remove</ConfirmAction>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

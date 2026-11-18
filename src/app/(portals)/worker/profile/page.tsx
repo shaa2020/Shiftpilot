@@ -14,7 +14,7 @@ import { addOwnAvailabilityAction, addOwnLanguageAction, addOwnSkillAction, remo
 
 export const metadata: Metadata = { title: "My profile" };
 const DAYS = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const TABS = ["onboarding", "details", "skills", "availability"] as const;
+const TABS = ["onboarding", "details", "skills", "availability", "feedback"] as const;
 
 export default async function WorkerProfilePage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const ctx = await requireWorker();
@@ -59,6 +59,7 @@ export default async function WorkerProfilePage({ searchParams }: { searchParams
       )}
       {tab === "skills" && <Skills workerId={ctx.workerId} agencyId={ctx.agencyId} />}
       {tab === "availability" && <Availability workerId={ctx.workerId} />}
+      {tab === "feedback" && <Feedback workerId={ctx.workerId} />}
     </>
   );
 }
@@ -170,5 +171,32 @@ async function Availability({ workerId }: { workerId: string }) {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+/** Ratings clients gave this worker (their own data; clients' internal preferences are not shown). */
+async function Feedback({ workerId }: { workerId: string }) {
+  const supabase = await createClient();
+  const { data } = await supabase.from("worker_ratings").select("id, rating, comment, created_at").eq("worker_id", workerId).order("created_at", { ascending: false }).limit(50);
+  const avg = data?.length ? data.reduce((n, r) => n + r.rating, 0) / data.length : null;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Client feedback</CardTitle>
+        <CardDescription>{avg != null ? `Average ${avg.toFixed(1)} out of 5 from ${data!.length} shift(s). Good ratings help you get more offers.` : "Clients can rate your shifts after they finish. Ratings will appear here."}</CardDescription>
+      </CardHeader>
+      {!!data?.length && (
+        <CardContent>
+          <ul className="divide-y divide-border">
+            {data.map((r) => (
+              <li key={r.id} className="py-2 text-sm">
+                <p className="flex items-center gap-2"><span aria-label={`${r.rating} out of 5`} className="text-amber-500">{"★".repeat(r.rating)}<span className="text-border">{"★".repeat(5 - r.rating)}</span></span><span className="ml-auto text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString("en-GB", { dateStyle: "medium" })}</span></p>
+                {r.comment && <p className="text-muted-foreground">“{r.comment}”</p>}
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      )}
+    </Card>
   );
 }
